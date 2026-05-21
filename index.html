@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planejador de Layout - Feira de Benefícios na Quadra</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome para Ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+            overflow-x: hidden;
+        }
+        /* Estilização da quadra com linhas esportivas */
+        .court-bg {
+            background-color: #f1f5f9;
+            background-image: 
+                radial-gradient(circle at 50% 50%, transparent 120px, #e11d48 120px, #e11d48 122px, transparent 123px),
+                linear-gradient(to right, transparent 49.8%, #e11d48 49.8%, #e11d48 50.2%, transparent 50.2%),
+                linear-gradient(to bottom, #e11d48 2px, transparent 2px),
+                linear-gradient(to top, #e11d48 2px, transparent 2px),
+                linear-gradient(to right, #e11d48 2px, transparent 2px),
+                linear-gradient(to left, #e11d48 2px, transparent 2px);
+            background-size: 100% 100%;
+            position: relative;
+        }
+        /* Área da grande área de futsal/basquete na esquerda e direita */
+        .court-bg::before {
+            content: '';
+            position: absolute;
+            top: 20%;
+            left: 0;
+            width: 15%;
+            height: 60%;
+            border: 2px solid #e11d48;
+            border-left: none;
+            border-radius: 0 120px 120px 0;
+            pointer-events: none;
+        }
+        .court-bg::after {
+            content: '';
+            position: absolute;
+            top: 20%;
+            right: 0;
+            width: 15%;
+            height: 60%;
+            border: 2px solid #e11d48;
+            border-right: none;
+            border-radius: 120px 0 0 120px;
+            pointer-events: none;
+        }
+        /* Grid de ajuda para posicionamento */
+        .grid-overlay {
+            background-image: radial-gradient(rgba(0, 0, 0, 0.08) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+        /* Efeito de item selecionado */
+        .stand-selected {
+            outline: 3px solid #3b82f6 !important;
+            outline-offset: 2px;
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.5) !important;
+            z-index: 50 !important;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Header Principal -->
+    <header class="bg-slate-900 border-b border-slate-800 px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4 z-10">
+        <div class="flex items-center gap-3">
+            <div class="bg-rose-600 p-2.5 rounded-lg flex items-center justify-center shadow-lg shadow-rose-900/30">
+                <i class="fa-solid fa-map-location-dot text-white text-xl"></i>
+            </div>
+            <div>
+                <h1 class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+                    Planejador de Layout <span class="text-xs bg-rose-500/20 text-rose-400 px-2.5 py-0.5 rounded-full border border-rose-500/30">Versão Quadra</span>
+                </h1>
+                <p class="text-xs text-slate-400">Feira de Benefícios • Layout Interativo de Stands</p>
+            </div>
+        </div>
+
+        <!-- Botões de Ação do Projeto -->
+        <div class="flex items-center flex-wrap gap-2">
+            <button onclick="toggleGrid()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-2 rounded-lg text-xs font-medium transition flex items-center gap-1.5" title="Ativar/Desativar grade de ajuda">
+                <i class="fa-solid fa-table-cells"></i> Grade
+            </button>
+            <button onclick="clearCanvas()" class="bg-red-950/40 hover:bg-red-900/50 text-red-200 border border-red-800/40 px-3 py-2 rounded-lg text-xs font-medium transition flex items-center gap-1.5">
+                <i class="fa-solid fa-trash-can"></i> Limpar Quadra
+            </button>
+            <span class="h-6 w-px bg-slate-800"></span>
+            <button onclick="triggerImport()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-2 rounded-lg text-xs font-medium transition flex items-center gap-1.5">
+                <i class="fa-solid fa-file-import"></i> Importar Layout
+            </button>
+            <input type="file" id="importFile" class="hidden" accept=".json" onchange="importLayout(event)">
+            <button onclick="exportLayout()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-2 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 shadow-lg shadow-emerald-950/20">
+                <i class="fa-solid fa-file-export"></i> Exportar Layout (JSON)
+            </button>
+            <button onclick="saveToBrowser()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-2 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 shadow-lg shadow-indigo-950/20">
+                <i class="fa-solid fa-floppy-disk"></i> Salvar Temporário
+            </button>
+        </div>
+    </header>
+
+    <!-- Estrutura Principal de Trabalho -->
+    <div class="flex-1 flex flex-col lg:flex-row overflow-hidden">
+        
+        <!-- Sidebar Esquerda: Repositório de Stands e Elementos (Arrastáveis) -->
+        <aside class="w-full lg:w-80 bg-slate-900 border-r border-slate-800 flex flex-col h-auto lg:h-[calc(100vh-73px)] overflow-y-auto p-4 shrink-0">
+            <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-400 mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-cubes-stacked text-rose-500"></i> Stands das Arenas
+            </h2>
+
+            <!-- Acordeão / Seções de Stands -->
+            <div class="space-y-4">
+                <!-- Arena Saúde e Bem-Estar -->
+                <div class="bg-slate-950 rounded-xl border border-teal-950/60 p-3 overflow-hidden">
+                    <div class="flex items-center gap-2 mb-2 pb-2 border-b border-teal-950/40">
+                        <span class="w-2.5 h-2.5 rounded-full bg-teal-500 animate-pulse"></span>
+                        <h3 class="text-xs font-bold text-teal-400 uppercase tracking-wide">Saúde e Bem-Estar</h3>
+                    </div>
+                    <p class="text-[10px] text-slate-400 mb-3">Clique para adicionar na quadra:</p>
+                    <div class="grid grid-cols-1 gap-2" id="arena-saude-list">
+                        <!-- Gerado por JS -->
+                    </div>
+                </div>
+
+                <!-- Arena Suporte Integral -->
+                <div class="bg-slate-950 rounded-xl border border-sky-950/60 p-3 overflow-hidden">
+                    <div class="flex items-center gap-2 mb-2 pb-2 border-b border-sky-950/40">
+                        <span class="w-2.5 h-2.5 rounded-full bg-sky-500 animate-pulse"></span>
+                        <h3 class="text-xs font-bold text-sky-400 uppercase tracking-wide">Suporte Integral</h3>
+                    </div>
+                    <p class="text-[10px] text-slate-400 mb-3">Clique para adicionar na quadra:</p>
+                    <div class="grid grid-cols-1 gap-2" id="arena-suporte-list">
+                        <!-- Gerado por JS -->
+                    </div>
+                </div>
+
+                <!-- Arena iFood Benefícios -->
+                <div class="bg-slate-950 rounded-xl border border-amber-950/60 p-3 overflow-hidden">
+                    <div class="flex items-center gap-2 mb-2 pb-2 border-b border-amber-950/40">
+                        <span class="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></span>
+                        <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wide flex items-center gap-1">
+                            iFood Benefícios ⚽️ <span class="text-[9px] bg-amber-500/10 text-amber-300 px-1 py-0.5 rounded border border-amber-500/20">Copa</span>
+                        </h3>
+                    </div>
+                    <p class="text-[10px] text-slate-400 mb-3">Estilo Copa do Mundo / Clima festivo:</p>
+                    <div class="grid grid-cols-1 gap-2" id="arena-ifood-list">
+                        <!-- Gerado por JS -->
+                    </div>
+                </div>
+
+                <!-- Elementos Estruturais e Extras -->
+                <div class="bg-slate-950 rounded-xl border border-slate-800 p-3 overflow-hidden mb-6">
+                    <div class="flex items-center gap-2 mb-2 pb-2 border-b border-slate-800">
+                        <span class="w-2.5 h-2.5 rounded-full bg-slate-400"></span>
+                        <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wide">Estrutura & Extras</h3>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2" id="extra-items-list">
+                        <!-- Gerado por JS -->
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Área Central: A Quadra (Interactive Canvas) -->
+        <main class="flex-1 bg-slate-950 p-4 lg:p-6 flex flex-col justify-between overflow-y-auto relative h-auto lg:h-[calc(100vh-73px)]">
+            
+            <!-- Legenda Rápida da Quadra Real -->
+            <div class="bg-slate-900/90 backdrop-blur border border-slate-800 rounded-xl p-3 mb-4 flex flex-wrap items-center justify-between gap-4 text-xs">
+                <div class="flex items-center gap-4 flex-wrap">
+                    <div class="flex items-center gap-2">
+                        <div class="w-3 h-3 bg-red-600 rounded-sm"></div>
+                        <span class="text-slate-300 font-medium">Estruturas de Metal / Colunas</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="w-3 h-3 bg-amber-700/80 rounded-sm"></div>
+                        <span class="text-slate-300 font-medium">Arquibancada de Madeira</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="w-3 h-3 bg-teal-600 rounded-sm"></div>
+                        <span class="text-slate-300">Saúde</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="w-3 h-3 bg-sky-600 rounded-sm"></div>
+                        <span class="text-slate-300">Suporte</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="w-3 h-3 bg-rose-600 rounded-sm"></div>
+                        <span class="text-slate-300">iFood / Copa</span>
+                    </div>
+                </div>
+                <div class="text-[11px] text-slate-400 bg-slate-950/60 px-2.5 py-1 rounded border border-slate-800">
+                    💡 <span class="font-semibold text-rose-400">Dica:</span> Selecione um item na quadra para rotacionar, redimensionar ou remover.
+                </div>
+            </div>
+
+            <!-- Canvas Container com Zoom -->
+            <div class="flex-1 flex items-center justify-center overflow-auto p-2 bg-slate-900 rounded-2xl border border-slate-800/80 shadow-inner relative min-h-[500px]">
+                
+                <!-- O MAPA DA QUADRA -->
+                <div id="court-canvas" class="court-bg grid-overlay w-[1000px] h-[550px] rounded-lg shadow-2xl relative overflow-hidden transition-all duration-200">
+                    
+                    <!-- Arquibancada Superior (Representando a de madeira das fotos) -->
+                    <div class="absolute top-0 left-10 right-10 h-10 bg-amber-800/90 border-b-2 border-amber-950 flex items-center justify-center z-10 shadow-md">
+                        <span class="text-[10px] font-bold text-amber-100 uppercase tracking-widest"><i class="fa-solid fa-chair"></i> Bloco de Arquibancada de Madeira (Superior)</span>
+                    </div>
+
+                    <!-- Arquibancada Inferior -->
+                    <div class="absolute bottom-0 left-10 right-10 h-10 bg-amber-800/90 border-t-2 border-amber-950 flex items-center justify-center z-10 shadow-md">
+                        <span class="text-[10px] font-bold text-amber-100 uppercase tracking-widest"><i class="fa-solid fa-chair"></i> Bloco de Arquibancada de Madeira (Inferior)</span>
+                    </div>
+
+                    <!-- Colunas Vermelhas de Metal (Laterais da Quadra das Fotos) -->
+                    <!-- Lado Esquerdo -->
+                    <div class="absolute top-1/4 left-0 w-3 h-12 bg-red-600 border border-red-800 rounded shadow z-20" title="Pilar Metálico"></div>
+                    <div class="absolute top-2/4 left-0 w-3 h-12 bg-red-600 border border-red-800 rounded shadow z-20" title="Pilar Metálico"></div>
+                    <div class="absolute top-3/4 left-0 w-3 h-12 bg-red-600 border border-red-800 rounded shadow z-20" title="Pilar Metálico"></div>
+                    <!-- Lado Direito -->
+                    <div class="absolute top-1/4 right-0 w-3 h-12 bg-red-600 border border-red-800 rounded shadow z-20" title="Pilar Metálico"></div>
+                    <div class="absolute top-2/4 right-0 w-3 h-12 bg-red-600 border border-red-800 rounded shadow z-20" title="Pilar Metálico"></div>
+                    <div class="absolute top-3/4 right-0 w-3 h-12 bg-red-600 border border-red-800 rounded shadow z-20" title="Pilar Metálico"></div>
+
+                    <!-- Elementos Dinâmicos Serão Renderizados Aqui via JS -->
+                    <div id="elements-container" class="absolute inset-0 w-full h-full"></div>
+
+                </div>
+            </div>
+
+            <!-- Rodapé Técnico/Informativo -->
+            <div class="mt-4 flex flex-col sm:flex-row justify-between items-center text-xs text-slate-500 gap-2">
+                <p>Criado para Feira de Benefícios • Respeitando a proporção da quadra (1000px equivalem a aprox. 40m de comprimento real)</p>
+                <div class="flex items-center gap-2">
+                    <span class="bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/20 font-medium">Layout Auto-Salvo</span>
+                </div>
+            </div>
+        </main>
+
+        <!-- Sidebar Direita: Inspetor e Configuração de Elemento Selecionado -->
+        <aside class="w-full lg:w-80 bg-slate-900 border-l border-slate-800 flex flex-col h-auto lg:h-[calc(100vh-73px)] overflow-y-auto p-4 shrink-0">
+            <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-400 mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-sliders text-rose-500"></i> Painel do Inspetor
+            </h2>
+
+            <!-- Estado Nenhum Item Selecionado -->
+            <div id="inspector-empty" class="bg-slate-950 rounded-xl border border-slate-800 p-6 text-center">
+                <div class="text-slate-600 mb-3 text-4xl">
+                    <i class="fa-solid fa-hand-pointer"></i>
+                </div>
+                <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Nenhum Stand Selecionado</h3>
+                <p class="text-[11px] text-slate-500">Clique em qualquer stand ou estrutura na quadra para editar suas propriedades físicas, rotacionar ou excluí-lo.</p>
+            </div>
+
+            <!-- Detalhes do Stand Selecionado -->
+            <div id="inspector-active" class="hidden space-y-4">
+                <div class="bg-slate-950 rounded-xl border border-blue-950/40 p-4">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="text-[10px] bg-blue-500/10 text-blue-400 px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider" id="el-category-badge">Stand</span>
+                        <button onclick="deleteSelected()" class="text-red-400 hover:text-red-300 text-xs font-semibold flex items-center gap-1 transition">
+                            <i class="fa-solid fa-trash"></i> Excluir
+                        </button>
+                    </div>
+
+                    <!-- Nome / Rótulo -->
+                    <div class="space-y-1 mb-4">
+                        <label class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Nome do Stand / Empresa</label>
+                        <input type="text" id="el-name-input" oninput="updateSelectedProperty('name', this.value)" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500 transition">
+                    </div>
+
+                    <!-- Dimensões -->
+                    <div class="grid grid-cols-2 gap-3 mb-4">
+                        <div class="space-y-1">
+                            <label class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Largura (px)</label>
+                            <input type="number" id="el-width-input" oninput="updateSelectedProperty('w', parseInt(this.value))" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-blue-500 transition" min="30" max="300">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Profundidade (px)</label>
+                            <input type="number" id="el-height-input" oninput="updateSelectedProperty('h', parseInt(this.value))" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-blue-500 transition" min="30" max="300">
+                        </div>
+                    </div>
+
+                    <!-- Rotação Slider -->
+                    <div class="space-y-1 mb-4">
+                        <div class="flex justify-between text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+                            <span>Rotação Ângulo</span>
+                            <span id="el-rotation-text">0°</span>
+                        </div>
+                        <input type="range" id="el-rotation-input" min="0" max="359" oninput="updateSelectedProperty('rotation', parseInt(this.value))" class="w-full accent-blue-500 bg-slate-800 rounded-lg h-1">
+                    </div>
+
+                    <!-- Posicionamento Exato -->
+                    <div class="grid grid-cols-2 gap-3 mb-4">
+                        <div class="space-y-1">
+                            <label class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Posição X</label>
+                            <input type="number" id="el-x-input" oninput="updateSelectedProperty('x', parseInt(this.value))" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-blue-500 transition">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Posição Y</label>
+                            <input type="number" id="el-y-input" oninput="updateSelectedProperty('y', parseInt(this.value))" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-blue-500 transition">
+                        </div>
+                    </div>
+
+                    <!-- Personalização de Cores -->
+                    <div class="space-y-1">
+                        <label class="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1 block">Cor do Stand</label>
+                        <div class="flex gap-1.5 flex-wrap">
+                            <button onclick="updateSelectedProperty('color', 'bg-teal-600')" class="w-6 h-6 rounded bg-teal-600 border border-teal-400"></button>
+                            <button onclick="updateSelectedProperty('color', 'bg-sky-600')" class="w-6 h-6 rounded bg-sky-600 border border-sky-400"></button>
+                            <button onclick="updateSelectedProperty('color', 'bg-emerald-600')" class="w-6 h-6 rounded bg-emerald-600 border border-emerald-400"></button>
+                            <button onclick="updateSelectedProperty('color', 'bg-rose-600')" class="w-6 h-6 rounded bg-rose-600 border border-rose-400"></button>
+                            <button onclick="updateSelectedProperty('color', 'bg-amber-600')" class="w-6 h-6 rounded bg-amber-600 border border-amber-400"></button>
+                            <button onclick="updateSelectedProperty('color', 'bg-purple-600')" class="w-6 h-6 rounded bg-purple-600 border border-purple-400"></button>
+                            <button onclick="updateSelectedProperty('color', 'bg-slate-700')" class="w-6 h-6 rounded bg-slate-700 border border-slate-500"></button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Histórico de Versões do Layout -->
+                <div class="bg-slate-950 rounded-xl border border-slate-800 p-4">
+                    <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wide mb-3 flex items-center gap-1">
+                        <i class="fa-solid fa-history text-indigo-400"></i> Seus Layouts Salvos
+                    </h3>
+                    <div class="space-y-2 text-xs" id="saved-slots-list">
+                        <!-- Gerado por JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Informação das Arenas Cadastradas -->
+            <div class="mt-6 bg-slate-950/50 rounded-xl border border-slate-800/80 p-3 text-xs space-y-2">
+                <h3 class="font-bold text-slate-300 uppercase text-[10px] tracking-widest">Informações da Feira</h3>
+                <p class="text-slate-400 text-[11px] leading-relaxed">
+                    <strong>Total de Stands de Benefícios:</strong> 17 Stands.
+                </p>
+                <div class="text-[10px] text-slate-500 border-t border-slate-800/80 pt-2">
+                    A largura padrão recomendada para Stands médios é de 80px (aprox. 3.2m de largura). Para totens ou quiosques menores, use 50px.
+                </div>
+            </div>
+        </aside>
+
+    </div>
+
+    <!-- Script Principal Interativo -->
+    <script>
+        // Configuração dos stands passados pelo usuário
+        const INITIAL_STANDS = {
+            saude: [
+                { name: 'Wellhub', size: { w: 90, h: 70 }, color: 'bg-teal-600 border-teal-400 text-teal-100' },
+                { name: 'Bradesco Saúde', size: { w: 90, h: 70 }, color: 'bg-teal-600 border-teal-400 text-teal-100' },
+                { name: 'Unimed CNU', size: { w: 90, h: 70 }, color: 'bg-teal-600 border-teal-400 text-teal-100' },
+                { name: 'Vida Link', size: { w: 90, h: 70 }, color: 'bg-teal-600 border-teal-400 text-teal-100' },
+                { name: 'Bradesco Odonto', size: { w: 90, h: 70 }, color: 'bg-teal-600 border-teal-400 text-teal-100' },
+                { name: 'Avus', size: { w: 80, h: 60 }, color: 'bg-teal-600 border-teal-400 text-teal-100' },
+                { name: 'Meu Pet', size: { w: 80, h: 60 }, color: 'bg-teal-600 border-teal-400 text-teal-100' }
+            ],
+            suporte: [
+                { name: 'Stay', size: { w: 90, h: 70 }, color: 'bg-sky-600 border-sky-400 text-sky-100' },
+                { name: 'Leggal', size: { w: 90, h: 70 }, color: 'bg-sky-600 border-sky-400 text-sky-100' },
+                { name: 'Travel Cash', size: { w: 90, h: 70 }, color: 'bg-sky-600 border-sky-400 text-sky-100' },
+                { name: 'New Value', size: { w: 90, h: 70 }, color: 'bg-sky-600 border-sky-400 text-sky-100' },
+                { name: 'Toten Benício', size: { w: 60, h: 60 }, color: 'bg-sky-600 border-sky-400 text-sky-100' }
+            ],
+            ifood: [
+                { name: 'iFood VA/VR ⚽', size: { w: 100, h: 80 }, color: 'bg-rose-600 border-yellow-400 text-white' },
+                { name: 'iFood Cultura ⚽', size: { w: 100, h: 80 }, color: 'bg-rose-600 border-yellow-400 text-white' },
+                { name: 'iFood Mobilidade ⚽', size: { w: 100, h: 80 }, color: 'bg-rose-600 border-yellow-400 text-white' },
+                { name: 'iFood Farmácia ⚽', size: { w: 100, h: 80 }, color: 'bg-rose-600 border-yellow-400 text-white' },
+                { name: 'iFood Saldo Livre ⚽', size: { w: 100, h: 80 }, color: 'bg-rose-600 border-yellow-400 text-white' },
+                { name: 'Time de Benefícios Corretora ⚽', size: { w: 110, h: 80 }, color: 'bg-amber-600 border-yellow-400 text-white' }
+            ],
+            extras: [
+                { name: 'Palco Principal', size: { w: 180, h: 100 }, color: 'bg-slate-700 border-slate-500 text-white' },
+                { name: 'Entrada / Credenciamento', size: { w: 140, h: 60 }, color: 'bg-emerald-700 border-emerald-500 text-white' },
+                { name: 'Mesa Redonda', size: { w: 70, h: 70 }, color: 'bg-slate-700 border-slate-500 text-white rounded-full' },
+                { name: 'Pilar de Apoio Extra', size: { w: 40, h: 40 }, color: 'bg-red-800 border-red-500 text-white' },
+                { name: 'Praça de Alimentação', size: { w: 150, h: 90 }, color: 'bg-amber-800 border-amber-600 text-white' }
+            ]
+        };
+
+        // Estado Global da Aplicação
+        let activeElements = [];
+        let selectedElementId = null;
+        let isGridEnabled = true;
+        const GRID_SIZE = 10;
+
+        // Configurações do Drag and Drop
+        let isDragging = false;
+        let dragTarget = null;
+        let dragOffsetX = 0;
+        let dragOffsetY = 0;
+
+        // Inicialização da Aplicação
+        window.onload = function() {
+            renderSidebarLists();
+            loadFromBrowser(); // Tenta carregar o último layout salvo
+            renderCanvas();
+            renderSavedSlots();
+        };
+
+        // Renderiza a lista de stands que podem ser adicionados
+        function renderSidebarLists() {
+            const renderItem = (item, cat) => `
+                <button onclick="addElement('${item.name}', ${item.size.w}, ${item.size.h}, '${item.color}', '${cat}')" 
+                        class="w-full text-left bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-slate-200 text-xs px-3 py-2.5 rounded-lg font-medium transition flex items-center justify-between group">
+                    <span class="truncate flex items-center gap-1.5">
+                        <i class="fa-solid fa-plus text-[10px] text-slate-500 group-hover:text-white transition"></i>
+                        ${item.name}
+                    </span>
+                    <span class="text-[9px] text-slate-500 group-hover:text-slate-300 font-mono">${item.size.w}x${item.size.h}</span>
+                </button>
+            `;
+
+            document.getElementById('arena-saude-list').innerHTML = INITIAL_STANDS.saude.map(i => renderItem(i, 'saude')).join('');
+            document.getElementById('arena-suporte-list').innerHTML = INITIAL_STANDS.suporte.map(i => renderItem(i, 'suporte')).join('');
+            document.getElementById('arena-ifood-list').innerHTML = INITIAL_STANDS.ifood.map(i => renderItem(i, 'ifood')).join('');
+            document.getElementById('extra-items-list').innerHTML = INITIAL_STANDS.extras.map(i => renderItem(i, 'extras')).join('');
+        }
+
+        // Adiciona um elemento ao layout da quadra no centro
+        function addElement(name, w, h, color, category) {
+            const canvas = document.getElementById('court-canvas');
+            const canvasW = canvas.clientWidth;
+            const canvasH = canvas.clientHeight;
+            
+            // Centraliza o novo elemento respeitando a grade
+            let startX = Math.round((canvasW / 2 - w / 2) / GRID_SIZE) * GRID_SIZE;
+            let startY = Math.round((canvasH / 2 - h / 2) / GRID_SIZE) * GRID_SIZE;
+
+            const newElement = {
+                id: 'el_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+                name: name,
+                category: category,
+                x: startX,
+                y: startY,
+                w: w,
+                h: h,
+                rotation: 0,
+                color: color
+            };
+
+            activeElements.push(newElement);
+            selectElement(newElement.id);
+            renderCanvas();
+            autoSave();
+        }
+
+        // Renderiza todos os elementos na quadra
+        function renderCanvas() {
+            const container = document.getElementById('elements-container');
+            container.innerHTML = '';
+
+            activeElements.forEach(el => {
+                const isSelected = el.id === selectedElementId;
+                const isRound = el.color.includes('rounded-full');
+                
+                const elementDiv = document.createElement('div');
+                elementDiv.id = el.id;
+                elementDiv.className = `absolute select-none cursor-move flex flex-col justify-between items-center p-2 border-2 text-center shadow-lg transition-shadow duration-150 ${el.color} ${isSelected ? 'stand-selected' : ''}`;
+                
+                // Aplicar estilo de círculo se definido
+                if (isRound) {
+                    elementDiv.style.borderRadius = '50%';
+                } else {
+                    elementDiv.style.borderRadius = '8px';
+                }
+
+                elementDiv.style.width = `${el.w}px`;
+                elementDiv.style.height = `${el.h}px`;
+                elementDiv.style.left = `${el.x}px`;
+                elementDiv.style.top = `${el.y}px`;
+                elementDiv.style.transform = `rotate(${el.rotation}deg)`;
+                elementDiv.style.zIndex = isSelected ? '40' : '30';
+
+                // Conteúdo Visual do Stand/Elemento
+                let categoryBadge = '';
+                if (el.category === 'ifood') {
+                    categoryBadge = `<span class="text-[8px] bg-yellow-400 text-slate-900 px-1 py-0.2 rounded font-bold uppercase tracking-widest">iFood</span>`;
+                } else if (el.category === 'saude') {
+                    categoryBadge = `<span class="text-[8px] bg-teal-800 text-teal-100 px-1 py-0.2 rounded font-bold uppercase tracking-widest">Saúde</span>`;
+                } else if (el.category === 'suporte') {
+                    categoryBadge = `<span class="text-[8px] bg-sky-800 text-sky-100 px-1 py-0.2 rounded font-bold uppercase tracking-widest">Suporte</span>`;
+                }
+
+                elementDiv.innerHTML = `
+                    <div class="w-full flex justify-between items-center gap-1">
+                        ${categoryBadge}
+                        <span class="text-[9px] font-mono text-white/50">${el.w}x${el.h}</span>
+                    </div>
+                    <div class="text-[11px] font-bold leading-tight px-1 w-full truncate my-auto" title="${el.name}">
+                        ${el.name}
+                    </div>
+                    <div class="text-[9px] font-bold text-white/70">
+                        ${el.rotation !== 0 ? `${el.rotation}°` : ''}
+                    </div>
+                `;
+
+                // Eventos de Mouse/Touch para arrastar
+                elementDiv.addEventListener('mousedown', (e) => startDrag(e, el.id));
+                elementDiv.addEventListener('touchstart', (e) => startDrag(e, el.id), { passive: true });
+
+                container.appendChild(elementDiv);
+            });
+        }
+
+        // Funções de Arrastar e Posicionar (Drag and Drop)
+        function startDrag(e, elementId) {
+            e.stopPropagation();
+            selectElement(elementId);
+
+            const el = activeElements.find(item => item.id === elementId);
+            if (!el) return;
+
+            isDragging = true;
+            dragTarget = elementId;
+
+            const clientX = e.type.startsWith('touch') ? e.touches[0].clientX : e.clientX;
+            const clientY = e.type.startsWith('touch') ? e.touches[0].clientY : e.clientY;
+
+            dragOffsetX = clientX - el.x;
+            dragOffsetY = clientY - el.y;
+
+            document.addEventListener('mousemove', dragMove);
+            document.addEventListener('touchmove', dragMove, { passive: false });
+            document.addEventListener('mouseup', stopDrag);
+            document.addEventListener('touchend', stopDrag);
+        }
+
+        function dragMove(e) {
+            if (!isDragging || !dragTarget) return;
+
+            // Previne scroll do touch em celulares enquanto arrasta
+            if (e.cancelable) e.preventDefault();
+
+            const canvas = document.getElementById('court-canvas');
+            const el = activeElements.find(item => item.id === dragTarget);
+            if (!el) return;
+
+            const clientX = e.type.startsWith('touch') ? e.touches[0].clientX : e.clientX;
+            const clientY = e.type.startsWith('touch') ? e.touches[0].clientY : e.clientY;
+
+            let newX = clientX - dragOffsetX;
+            let newY = clientY - dragOffsetY;
+
+            // Restringe o movimento dentro da quadra
+            const maxX = canvas.clientWidth - el.w;
+            const maxY = canvas.clientHeight - el.h;
+
+            newX = Math.max(0, Math.min(newX, maxX));
+            newY = Math.max(0, Math.min(newY, maxY));
+
+            // Aplica Snap to Grid se ativo
+            if (isGridEnabled) {
+                newX = Math.round(newX / GRID_SIZE) * GRID_SIZE;
+                newY = Math.round(newY / GRID_SIZE) * GRID_SIZE;
+            }
+
+            el.x = newX;
+            el.y = newY;
+
+            // Atualiza fisicamente no DOM para alto desempenho
+            const elementDom = document.getElementById(dragTarget);
+            if (elementDom) {
+                elementDom.style.left = `${newX}px`;
+                elementDom.style.top = `${newY}px`;
+            }
+
+            // Atualiza inputs no painel
+            document.getElementById('el-x-input').value = newX;
+            document.getElementById('el-y-input').value = newY;
+        }
+
+        function stopDrag() {
+            if (isDragging) {
+                isDragging = false;
+                dragTarget = null;
+                document.removeEventListener('mousemove', dragMove);
+                document.removeEventListener('touchmove', dragMove);
+                document.removeEventListener('mouseup', stopDrag);
+                document.removeEventListener('touchend', stopDrag);
+                autoSave();
+            }
+        }
+
+        // Seleciona um stand específico e carrega suas propriedades no inspetor
+        function selectElement(id) {
+            selectedElementId = id;
+            
+            // Remove realce anterior e adiciona no novo
+            document.querySelectorAll('#elements-container > div').forEach(div => {
+                div.classList.remove('stand-selected');
+            });
+
+            const el = activeElements.find(item => item.id === id);
+            if (el) {
+                const elDom = document.getElementById(id);
+                if (elDom) elDom.classList.add('stand-selected');
+
+                // Preencher painel do inspetor
+                document.getElementById('inspector-empty').classList.add('hidden');
+                document.getElementById('inspector-active').classList.remove('hidden');
+
+                document.getElementById('el-category-badge').innerText = el.category ? el.category.toUpperCase() : 'STAND';
+                document.getElementById('el-name-input').value = el.name;
+                document.getElementById('el-width-input').value = el.w;
+                document.getElementById('el-height-input').value = el.h;
+                document.getElementById('el-rotation-input').value = el.rotation;
+                document.getElementById('el-rotation-text').innerText = `${el.rotation}°`;
+                document.getElementById('el-x-input').value = el.x;
+                document.getElementById('el-y-input').value = el.y;
+            } else {
+                document.getElementById('inspector-empty').classList.remove('hidden');
+                document.getElementById('inspector-active').classList.add('hidden');
+            }
+        }
+
+        // Deselecionar se clicar fora
+        document.getElementById('court-canvas').addEventListener('mousedown', function(e) {
+            if (e.target === this || e.target.id === 'elements-container') {
+                selectedElementId = null;
+                selectElement(null);
+            }
+        });
+
+        // Atualiza propriedades do objeto selecionado diretamente do Inspetor
+        function updateSelectedProperty(property, value) {
+            if (!selectedElementId) return;
+            const el = activeElements.find(item => item.id === selectedElementId);
+            if (!el) return;
+
+            // Restrições de valores mínimos e máximos para segurança
+            if (property === 'w') value = Math.max(30, Math.min(value || 30, 400));
+            if (property === 'h') value = Math.max(30, Math.min(value || 30, 400));
+            if (property === 'rotation') {
+                value = value % 360;
+                document.getElementById('el-rotation-text').innerText = `${value}°`;
+            }
+
+            // Aplicar alteração de cor mantendo compatibilidade com categorias
+            if (property === 'color') {
+                el.color = value + " border-white text-white";
+            } else {
+                el[property] = value;
+            }
+
+            renderCanvas();
+            autoSave();
+        }
+
+        // Exclui o item selecionado
+        function deleteSelected() {
+            if (!selectedElementId) return;
+            activeElements = activeElements.filter(item => item.id !== selectedElementId);
+            selectedElementId = null;
+            selectElement(null);
+            renderCanvas();
+            autoSave();
+        }
+
+        // Limpa totalmente o canvas de stands criados pelo usuário
+        function clearCanvas() {
+            if (confirm("Deseja realmente remover todos os stands e limpar a quadra?")) {
+                activeElements = [];
+                selectedElementId = null;
+                selectElement(null);
+                renderCanvas();
+                autoSave();
+            }
+        }
+
+        // Ativa ou desativa o alinhamento de grade
+        function toggleGrid() {
+            isGridEnabled = !isGridEnabled;
+            const canvas = document.getElementById('court-canvas');
+            if (isGridEnabled) {
+                canvas.classList.add('grid-overlay');
+            } else {
+                canvas.classList.remove('grid-overlay');
+            }
+        }
+
+        // ---- EXPORTAÇÃO E SALVAMENTO ----
+
+        // Auto-salva no LocalStorage no slot "current" para evitar perda de dados
+        function autoSave() {
+            localStorage.setItem('layout_quadra_current', JSON.stringify(activeElements));
+        }
+
+        // Carrega o auto-salvamento se houver
+        function loadFromBrowser() {
+            const saved = localStorage.getItem('layout_quadra_current');
+            if (saved) {
+                try {
+                    activeElements = JSON.parse(saved);
+                } catch(e) {
+                    activeElements = [];
+                }
+            }
+        }
+
+        // Exporta o arquivo JSON com a configuração do mapa de stands
+        function exportLayout() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(activeElements, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", "layout_feira_beneficios_quadra.json");
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        }
+
+        // Dispara o seletor de arquivos oculto para importação
+        function triggerImport() {
+            document.getElementById('importFile').click();
+        }
+
+        // Importa layout de arquivo JSON
+        function importLayout(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (Array.isArray(imported)) {
+                        activeElements = imported;
+                        selectedElementId = null;
+                        selectElement(null);
+                        renderCanvas();
+                        autoSave();
+                        alert("Layout importado com sucesso para a quadra!");
+                    } else {
+                        alert("Arquivo inválido. Formato JSON incompatível.");
+                    }
+                } catch (err) {
+                    alert("Erro ao ler o arquivo JSON.");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // Salva uma versão nomeada no navegador do usuário
+        function saveToBrowser() {
+            const name = prompt("Dê um nome para esta versão do layout (ex: Opção A, Configuração Final):");
+            if (!name) return;
+
+            const slotId = 'layout_quadra_' + Date.now();
+            const slotData = {
+                id: slotId,
+                name: name,
+                date: new Date().toLocaleDateString('pt-BR', {hour: '2-digit', minute:'2-digit'}),
+                elements: activeElements
+            };
+
+            // Salvar no dicionário de slots salvos
+            let slots = JSON.parse(localStorage.getItem('layout_quadra_slots') || '[]');
+            slots.push(slotData);
+            localStorage.setItem('layout_quadra_slots', JSON.stringify(slots));
+
+            renderSavedSlots();
+        }
+
+        // Renderiza a lista de versões salvas no painel lateral
+        function renderSavedSlots() {
+            const container = document.getElementById('saved-slots-list');
+            if (!container) return;
+
+            const slots = JSON.parse(localStorage.getItem('layout_quadra_slots') || '[]');
+            if (slots.length === 0) {
+                container.innerHTML = `<p class="text-slate-500 text-[11px]">Nenhuma versão salva localmente.</p>`;
+                return;
+            }
+
+            container.innerHTML = slots.map(slot => `
+                <div class="bg-slate-900 border border-slate-800 p-2 rounded-lg flex justify-between items-center gap-1">
+                    <div class="truncate pr-1">
+                        <p class="font-semibold text-slate-200 truncate text-[11px]">${slot.name}</p>
+                        <p class="text-[9px] text-slate-500">${slot.date}</p>
+                    </div>
+                    <div class="flex gap-1 shrink-0">
+                        <button onclick="loadSlot('${slot.id}')" class="bg-indigo-900/60 hover:bg-indigo-800/80 text-indigo-200 px-1.5 py-1 rounded text-[10px] transition" title="Carregar">
+                            <i class="fa-solid fa-folder-open"></i>
+                        </button>
+                        <button onclick="deleteSlot('${slot.id}')" class="bg-red-950/40 hover:bg-red-900/50 text-red-400 px-1.5 py-1 rounded text-[10px] transition" title="Excluir">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Carrega um slot salvo
+        function loadSlot(slotId) {
+            const slots = JSON.parse(localStorage.getItem('layout_quadra_slots') || '[]');
+            const slot = slots.find(s => s.id === slotId);
+            if (slot && confirm(`Deseja carregar a versão "${slot.name}"? Isso substituirá o layout atual.`)) {
+                activeElements = slot.elements;
+                selectedElementId = null;
+                selectElement(null);
+                renderCanvas();
+                autoSave();
+            }
+        }
+
+        // Deleta um slot salvo do histórico
+        function deleteSlot(slotId) {
+            let slots = JSON.parse(localStorage.getItem('layout_quadra_slots') || '[]');
+            slots = slots.filter(s => s.id !== slotId);
+            localStorage.setItem('layout_quadra_slots', JSON.stringify(slots));
+            renderSavedSlots();
+        }
+    </script>
+</body>
+</html>
