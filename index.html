@@ -1,837 +1,685 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Planejador de Layout - Feira de Benefícios na Quadra</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome para Ícones -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-color: #0f172a;
-            color: #f8fafc;
-            overflow-x: hidden;
-        }
-        /* Estilização da quadra com linhas esportivas */
-        .court-bg {
-            background-color: #f1f5f9;
-            background-image: 
-                radial-gradient(circle at 50% 50%, transparent 120px, #e11d48 120px, #e11d48 122px, transparent 123px),
-                linear-gradient(to right, transparent 49.8%, #e11d48 49.8%, #e11d48 50.2%, transparent 50.2%),
-                linear-gradient(to bottom, #e11d48 2px, transparent 2px),
-                linear-gradient(to top, #e11d48 2px, transparent 2px),
-                linear-gradient(to right, #e11d48 2px, transparent 2px),
-                linear-gradient(to left, #e11d48 2px, transparent 2px);
-            background-size: 100% 100%;
-            position: relative;
-        }
-        /* Área da grande área de futsal/basquete na esquerda e direita */
-        .court-bg::before {
-            content: '';
-            position: absolute;
-            top: 20%;
-            left: 0;
-            width: 15%;
-            height: 60%;
-            border: 2px solid #e11d48;
-            border-left: none;
-            border-radius: 0 120px 120px 0;
-            pointer-events: none;
-        }
-        .court-bg::after {
-            content: '';
-            position: absolute;
-            top: 20%;
-            right: 0;
-            width: 15%;
-            height: 60%;
-            border: 2px solid #e11d48;
-            border-right: none;
-            border-radius: 120px 0 0 120px;
-            pointer-events: none;
-        }
-        /* Grid de ajuda para posicionamento */
-        .grid-overlay {
-            background-image: radial-gradient(rgba(0, 0, 0, 0.08) 1px, transparent 1px);
-            background-size: 20px 20px;
-        }
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #1e293b;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #475569;
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #64748b;
-        }
-        /* Efeito de item selecionado */
-        .stand-selected {
-            outline: 3px solid #3b82f6 !important;
-            outline-offset: 2px;
-            box-shadow: 0 0 15px rgba(59, 130, 246, 0.5) !important;
-            z-index: 50 !important;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Feira de Benefícios iFood – Mapa Interativo</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --red:#EA1D2C; --red-dk:#b5131f; --red-lt:#ff4d59;
+    --gray-dark:#302C28; --sidebar-bg:#252018; --toolbar-bg:#1E180E;
+    --court-floor:#EDE4CF; --court-border:#C4A882; --court-line:rgba(180,155,105,.4);
+    --c-health:#00A878; --c-support:#4361EE; --c-ifood:#EA1D2C;
+    --gray-mid:#9B9490;
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'DM Sans',sans-serif;background:var(--gray-dark);color:#fff;min-height:100vh;overflow:hidden;display:flex;flex-direction:column}
+
+  /* HEADER */
+  header{background:var(--red);padding:11px 26px;display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid var(--red-dk);flex-shrink:0;box-shadow:0 4px 20px rgba(0,0,0,.45)}
+  .logo-row{display:flex;align-items:center;gap:11px}
+  .logo-badge{width:37px;height:37px;background:#fff;border-radius:7px;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue';color:var(--red);font-size:15px;letter-spacing:1px}
+  header h1{font-family:'Bebas Neue';font-size:23px;letter-spacing:3px;line-height:1}
+  header p{font-size:10px;color:rgba(255,255,255,.6);letter-spacing:1.5px;text-transform:uppercase}
+  .hdr-btns{display:flex;gap:7px}
+  .btn{padding:7px 14px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:none;transition:all .15s;font-family:'DM Sans';letter-spacing:.3px}
+  .btn-ghost{background:rgba(255,255,255,.13);color:#fff;border:1px solid rgba(255,255,255,.27)}
+  .btn-ghost:hover{background:rgba(255,255,255,.23)}
+  .btn-white{background:#fff;color:var(--red)}
+  .btn-white:hover{background:#f2efec}
+  .btn-swap{background:rgba(255,220,0,.18);color:#FFD700;border:1px solid rgba(255,220,0,.35)}
+  .btn-swap.active{background:#FFD700;color:#1a1000}
+  .btn-swap:hover{background:rgba(255,220,0,.28)}
+
+  /* LAYOUT */
+  .app-body{flex:1;display:grid;grid-template-columns:244px 1fr;overflow:hidden}
+
+  /* SIDEBAR */
+  aside{background:var(--sidebar-bg);border-right:1px solid rgba(255,255,255,.07);overflow-y:auto;padding:16px 13px;display:flex;flex-direction:column;gap:16px}
+  aside::-webkit-scrollbar{width:3px}
+  aside::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:4px}
+  .s-title{font-family:'Bebas Neue';font-size:11px;letter-spacing:2px;color:var(--gray-mid);text-transform:uppercase;padding-bottom:5px;border-bottom:1px solid rgba(255,255,255,.07);margin-bottom:7px}
+
+  .arena-cards{display:flex;flex-direction:column;gap:5px}
+  .ac{display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:7px;cursor:pointer;transition:background .14s;border:1px solid transparent}
+  .ac:hover{background:rgba(255,255,255,.05)}
+  .ac.active{border-color:rgba(255,255,255,.13);background:rgba(255,255,255,.08)}
+  .ac-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+  .ac-name{font-size:12px;font-weight:500;flex:1;line-height:1.2}
+  .ac-count{font-size:10px;color:var(--gray-mid);background:rgba(255,255,255,.08);padding:1px 6px;border-radius:10px}
+
+  .stand-list{display:flex;flex-direction:column;gap:3px}
+  .s-chip{padding:5px 8px;border-radius:5px;font-size:11px;cursor:pointer;transition:all .12s;border:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.03);display:flex;align-items:center;gap:7px}
+  .s-chip:hover{background:rgba(255,255,255,.09);transform:translateX(2px)}
+  .chip-dot{width:7px;height:7px;border-radius:2px;flex-shrink:0}
+
+  .info-box{background:rgba(234,29,44,.09);border:1px solid rgba(234,29,44,.2);border-radius:7px;padding:10px 11px;font-size:10.5px;color:rgba(255,255,255,.55);line-height:1.65}
+  .info-box strong{display:block;color:var(--red-lt);font-size:9.5px;letter-spacing:1px;text-transform:uppercase;margin-bottom:3px}
+
+  /* MAIN */
+  main{display:flex;flex-direction:column;background:#1A1610;overflow:hidden}
+  .toolbar{padding:7px 16px;background:var(--toolbar-bg);border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:9px;flex-shrink:0}
+  .zoom-row{display:flex;gap:3px;align-items:center}
+  .zbtn{width:25px;height:25px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:5px;color:#fff;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:background .12s}
+  .zbtn:hover{background:rgba(255,255,255,.16)}
+  .zlabel{font-size:10.5px;color:var(--gray-mid);min-width:34px;text-align:center}
+  .tsep{width:1px;height:16px;background:rgba(255,255,255,.09);margin:0 1px}
+  .mode-row{display:flex;gap:3px}
+  .mbtn{padding:4px 11px;border-radius:5px;font-size:10.5px;font-weight:600;cursor:pointer;border:1px solid rgba(255,255,255,.1);background:transparent;color:var(--gray-mid);transition:all .12s;font-family:'DM Sans'}
+  .mbtn.active{background:var(--red);color:#fff;border-color:var(--red)}
+  .toolbar-hint{font-size:10px;color:rgba(255,255,255,.28);margin-left:3px}
+  .swap-hint{font-size:10px;color:#FFD700;background:rgba(255,220,0,.1);padding:3px 9px;border-radius:4px;display:none}
+  .swap-hint.on{display:block}
+
+  /* CANVAS */
+  .canvas-wrap{flex:1;overflow:auto;padding:28px 32px;display:flex;align-items:flex-start;justify-content:flex-start}
+  .canvas-wrap::-webkit-scrollbar{width:5px;height:5px}
+  .canvas-wrap::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:4px}
+
+  /* COURT SCENE */
+  .court-scene{display:flex;align-items:stretch;gap:18px;transform-origin:top left;transition:transform .18s;flex-shrink:0}
+  .court-body{display:flex;align-items:center}
+  .goal{width:17px;height:76px;background:var(--court-floor);border:2.5px solid var(--court-border);flex-shrink:0}
+  .goal-l{border-right:none;border-radius:3px 0 0 3px}
+  .goal-r{border-left:none;border-radius:0 3px 3px 0}
+
+  #court{position:relative;width:900px;height:500px;background:var(--court-floor);border:2.5px solid var(--court-border);border-radius:2px;box-shadow:inset 0 0 60px rgba(160,130,80,.07),0 12px 50px rgba(0,0,0,.5);overflow:visible;flex-shrink:0}
+
+  /* Court markings */
+  .cm-v{position:absolute;width:2px;background:var(--court-line);pointer-events:none}
+  .cm-circle{position:absolute;border-radius:50%;border:2px solid var(--court-line);background:transparent;pointer-events:none}
+  .pen-area{position:absolute;top:50%;transform:translateY(-50%);width:88px;height:196px;border:2px solid var(--court-line);background:transparent;pointer-events:none}
+  .pen-l{left:0;border-left:none;border-radius:0 6px 6px 0}
+  .pen-r{right:0;border-right:none;border-radius:6px 0 0 6px}
+
+  .copa-strip{position:absolute;bottom:9px;left:50%;transform:translateX(-50%);background:linear-gradient(120deg,#EA1D2C 0%,#ff7a00 100%);color:#fff;font-family:'Bebas Neue';font-size:11.5px;letter-spacing:3px;padding:4px 16px;border-radius:20px;pointer-events:none;white-space:nowrap;box-shadow:0 4px 12px rgba(234,29,44,.4)}
+
+  /* ARQUIBANCADA */
+  .arquibancada{width:108px;background:#2A2318;border:2.5px solid #5A4E3A;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;flex-shrink:0;box-shadow:inset 0 0 24px rgba(0,0,0,.28)}
+  .arquib-rows{display:flex;flex-direction:column;gap:5px;padding:10px 8px}
+  .arquib-row{height:8px;width:76px;border-radius:2px;background:rgba(200,180,140,.11);border:1px solid rgba(200,180,140,.14)}
+  .arquib-label{font-family:'Bebas Neue';font-size:13px;letter-spacing:3px;color:rgba(200,180,140,.5);writing-mode:vertical-rl;text-orientation:mixed;transform:rotate(180deg);text-transform:uppercase}
+
+  /* STANDS */
+  .stand{position:absolute;border-radius:7px;cursor:grab;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:5px 4px;z-index:10;border:2px solid;transition:box-shadow .14s,transform .1s,opacity .18s;user-select:none}
+  .stand:hover{z-index:20;transform:scale(1.05)}
+  .stand.dragging{cursor:grabbing;z-index:999;opacity:.88;transform:scale(1.08) rotate(1.5deg)}
+  .stand.selected{outline:2.5px solid #fff;outline-offset:2px;z-index:50}
+  .stand.dim{opacity:.13}
+  .stand.swap-pick{outline:2.5px solid #FFD700;outline-offset:2px;z-index:60;animation:pulse-gold .7s infinite alternate}
+  @keyframes pulse-gold{from{box-shadow:0 0 0 0 rgba(255,220,0,.3)}to{box-shadow:0 0 0 6px rgba(255,220,0,.0)}}
+
+  .stand-icon{font-size:16px;margin-bottom:3px;line-height:1}
+  .stand-name{font-size:9px;font-weight:700;line-height:1.25;text-transform:uppercase;letter-spacing:.2px}
+
+  /* Stand themes by arena */
+  .stand.h{background:rgba(0,168,120,.14);border-color:rgba(0,168,120,.65);color:#003D2B}
+  .stand.h:hover{box-shadow:0 5px 18px rgba(0,168,120,.28)}
+  .stand.s{background:rgba(67,97,238,.13);border-color:rgba(67,97,238,.65);color:#0C1869}
+  .stand.s:hover{box-shadow:0 5px 18px rgba(67,97,238,.28)}
+  .stand.i{background:rgba(234,29,44,.12);border-color:rgba(234,29,44,.65);color:#560007}
+  .stand.i:hover{box-shadow:0 5px 18px rgba(234,29,44,.28)}
+
+  /* TOOLTIP */
+  #tt{position:fixed;background:#141210;border:1px solid rgba(255,255,255,.13);border-radius:7px;padding:8px 12px;font-size:11.5px;color:#fff;pointer-events:none;z-index:9999;opacity:0;transition:opacity .12s;max-width:185px;box-shadow:0 8px 22px rgba(0,0,0,.5)}
+  #tt.on{opacity:1}
+  #tt .tname{font-weight:700;font-size:12.5px;margin-bottom:2px}
+  #tt .tarena{font-size:9.5px;text-transform:uppercase;letter-spacing:.9px;opacity:.5}
+
+  /* CTX MENU */
+  #ctx{position:fixed;background:#1C1916;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:5px;z-index:9999;display:none;min-width:162px;box-shadow:0 8px 26px rgba(0,0,0,.55)}
+  .ci{padding:7px 11px;border-radius:5px;font-size:11.5px;cursor:pointer;transition:background .1s;display:flex;align-items:center;gap:8px}
+  .ci:hover{background:rgba(255,255,255,.08)}
+  .ci.del{color:#ff7070}
+  .ci.del:hover{background:rgba(255,80,80,.1)}
+  .csep{height:1px;background:rgba(255,255,255,.08);margin:3px 0}
+
+  /* STATUS BAR */
+  .statusbar{padding:6px 18px;background:var(--toolbar-bg);border-top:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:14px;font-size:10px;color:var(--gray-mid);flex-shrink:0}
+  .sdot{width:5px;height:5px;border-radius:50%;background:#4ade80;display:inline-block;margin-right:4px}
+
+  /* MODALS */
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:500;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+  .overlay.open{display:flex}
+  .modal{background:#282218;border:1px solid rgba(255,255,255,.1);border-radius:11px;padding:24px;width:360px;box-shadow:0 24px 60px rgba(0,0,0,.65)}
+  .modal h2{font-family:'Bebas Neue';font-size:20px;letter-spacing:2px;margin-bottom:14px}
+  .fg{margin-bottom:12px}
+  .fg label{display:block;font-size:9.5px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--gray-mid);margin-bottom:4px}
+  .fg input,.fg select{width:100%;padding:8px 11px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:6px;color:#fff;font-family:'DM Sans';font-size:12.5px;outline:none;transition:border-color .12s}
+  .fg input:focus,.fg select:focus{border-color:var(--red)}
+  .fg select option{background:#282218}
+  .mact{display:flex;gap:8px;margin-top:16px;justify-content:flex-end}
+  .bcan{background:transparent;border:1px solid rgba(255,255,255,.14);color:#fff;padding:7px 16px;border-radius:6px;cursor:pointer;font-family:'DM Sans';font-size:12.5px;transition:background .12s}
+  .bcan:hover{background:rgba(255,255,255,.08)}
+  .bconf{background:var(--red);border:none;color:#fff;padding:7px 16px;border-radius:6px;cursor:pointer;font-family:'DM Sans';font-size:12.5px;font-weight:600;transition:background .12s}
+  .bconf:hover{background:var(--red-dk)}
+
+  /* Color picker for arena change */
+  .arena-options{display:flex;flex-direction:column;gap:6px;margin-top:4px}
+  .ao{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:7px;cursor:pointer;border:2px solid transparent;transition:all .14s;background:rgba(255,255,255,.04)}
+  .ao:hover{background:rgba(255,255,255,.08)}
+  .ao.sel{border-color:rgba(255,255,255,.3);background:rgba(255,255,255,.1)}
+  .ao-dot{width:12px;height:12px;border-radius:3px;flex-shrink:0}
+  .ao-label{font-size:12.5px;font-weight:500}
+</style>
 </head>
-<body class="min-h-screen flex flex-col">
+<body>
 
-    <!-- Header Principal -->
-    <header class="bg-slate-900 border-b border-slate-800 px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4 z-10">
-        <div class="flex items-center gap-3">
-            <div class="bg-rose-600 p-2.5 rounded-lg flex items-center justify-center shadow-lg shadow-rose-900/30">
-                <i class="fa-solid fa-map-location-dot text-white text-xl"></i>
-            </div>
-            <div>
-                <h1 class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
-                    Planejador de Layout <span class="text-xs bg-rose-500/20 text-rose-400 px-2.5 py-0.5 rounded-full border border-rose-500/30">Versão Quadra</span>
-                </h1>
-                <p class="text-xs text-slate-400">Feira de Benefícios • Layout Interativo de Stands</p>
-            </div>
+<header>
+  <div class="logo-row">
+    <div class="logo-badge">iFB</div>
+    <div>
+      <h1>Feira de Benefícios</h1>
+      <p>Mapa interativo da quadra · Edição 2025</p>
+    </div>
+  </div>
+  <div class="hdr-btns">
+    <button class="btn btn-swap" id="swap-btn" onclick="toggleSwapMode()">⇄ Trocar Stands</button>
+    <button class="btn btn-ghost" onclick="resetLayout()">↺ Resetar</button>
+    <button class="btn btn-ghost" onclick="openModal('addModal')">+ Novo Stand</button>
+    <button class="btn btn-white" onclick="exportJSON()">⬇ Exportar</button>
+  </div>
+</header>
+
+<div class="app-body">
+  <aside>
+    <div>
+      <div class="s-title">Arenas</div>
+      <div class="arena-cards" id="arena-cards">
+        <div class="ac active" data-f="all" onclick="filterArena(this,'all')">
+          <div class="ac-dot" style="background:#777"></div>
+          <span class="ac-name">Todas</span>
+          <span class="ac-count" id="cnt-all">19</span>
         </div>
-
-        <!-- Botões de Ação do Projeto -->
-        <div class="flex items-center flex-wrap gap-2">
-            <button onclick="toggleGrid()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-2 rounded-lg text-xs font-medium transition flex items-center gap-1.5" title="Ativar/Desativar grade de ajuda">
-                <i class="fa-solid fa-table-cells"></i> Grade
-            </button>
-            <button onclick="clearCanvas()" class="bg-red-950/40 hover:bg-red-900/50 text-red-200 border border-red-800/40 px-3 py-2 rounded-lg text-xs font-medium transition flex items-center gap-1.5">
-                <i class="fa-solid fa-trash-can"></i> Limpar Quadra
-            </button>
-            <span class="h-6 w-px bg-slate-800"></span>
-            <button onclick="triggerImport()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-2 rounded-lg text-xs font-medium transition flex items-center gap-1.5">
-                <i class="fa-solid fa-file-import"></i> Importar Layout
-            </button>
-            <input type="file" id="importFile" class="hidden" accept=".json" onchange="importLayout(event)">
-            <button onclick="exportLayout()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-2 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 shadow-lg shadow-emerald-950/20">
-                <i class="fa-solid fa-file-export"></i> Exportar Layout (JSON)
-            </button>
-            <button onclick="saveToBrowser()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-2 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 shadow-lg shadow-indigo-950/20">
-                <i class="fa-solid fa-floppy-disk"></i> Salvar Temporário
-            </button>
+        <div class="ac" data-f="health" onclick="filterArena(this,'health')">
+          <div class="ac-dot" style="background:var(--c-health)"></div>
+          <span class="ac-name">Saúde e Bem-Estar</span>
+          <span class="ac-count" id="cnt-h">8</span>
         </div>
-    </header>
-
-    <!-- Estrutura Principal de Trabalho -->
-    <div class="flex-1 flex flex-col lg:flex-row overflow-hidden">
-        
-        <!-- Sidebar Esquerda: Repositório de Stands e Elementos (Arrastáveis) -->
-        <aside class="w-full lg:w-80 bg-slate-900 border-r border-slate-800 flex flex-col h-auto lg:h-[calc(100vh-73px)] overflow-y-auto p-4 shrink-0">
-            <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-400 mb-4 flex items-center gap-2">
-                <i class="fa-solid fa-cubes-stacked text-rose-500"></i> Stands das Arenas
-            </h2>
-
-            <!-- Acordeão / Seções de Stands -->
-            <div class="space-y-4">
-                <!-- Arena Saúde e Bem-Estar -->
-                <div class="bg-slate-950 rounded-xl border border-teal-950/60 p-3 overflow-hidden">
-                    <div class="flex items-center gap-2 mb-2 pb-2 border-b border-teal-950/40">
-                        <span class="w-2.5 h-2.5 rounded-full bg-teal-500 animate-pulse"></span>
-                        <h3 class="text-xs font-bold text-teal-400 uppercase tracking-wide">Saúde e Bem-Estar</h3>
-                    </div>
-                    <p class="text-[10px] text-slate-400 mb-3">Clique para adicionar na quadra:</p>
-                    <div class="grid grid-cols-1 gap-2" id="arena-saude-list">
-                        <!-- Gerado por JS -->
-                    </div>
-                </div>
-
-                <!-- Arena Suporte Integral -->
-                <div class="bg-slate-950 rounded-xl border border-sky-950/60 p-3 overflow-hidden">
-                    <div class="flex items-center gap-2 mb-2 pb-2 border-b border-sky-950/40">
-                        <span class="w-2.5 h-2.5 rounded-full bg-sky-500 animate-pulse"></span>
-                        <h3 class="text-xs font-bold text-sky-400 uppercase tracking-wide">Suporte Integral</h3>
-                    </div>
-                    <p class="text-[10px] text-slate-400 mb-3">Clique para adicionar na quadra:</p>
-                    <div class="grid grid-cols-1 gap-2" id="arena-suporte-list">
-                        <!-- Gerado por JS -->
-                    </div>
-                </div>
-
-                <!-- Arena iFood Benefícios -->
-                <div class="bg-slate-950 rounded-xl border border-amber-950/60 p-3 overflow-hidden">
-                    <div class="flex items-center gap-2 mb-2 pb-2 border-b border-amber-950/40">
-                        <span class="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></span>
-                        <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wide flex items-center gap-1">
-                            iFood Benefícios ⚽️ <span class="text-[9px] bg-amber-500/10 text-amber-300 px-1 py-0.5 rounded border border-amber-500/20">Copa</span>
-                        </h3>
-                    </div>
-                    <p class="text-[10px] text-slate-400 mb-3">Estilo Copa do Mundo / Clima festivo:</p>
-                    <div class="grid grid-cols-1 gap-2" id="arena-ifood-list">
-                        <!-- Gerado por JS -->
-                    </div>
-                </div>
-
-                <!-- Elementos Estruturais e Extras -->
-                <div class="bg-slate-950 rounded-xl border border-slate-800 p-3 overflow-hidden mb-6">
-                    <div class="flex items-center gap-2 mb-2 pb-2 border-b border-slate-800">
-                        <span class="w-2.5 h-2.5 rounded-full bg-slate-400"></span>
-                        <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wide">Estrutura & Extras</h3>
-                    </div>
-                    <div class="grid grid-cols-2 gap-2" id="extra-items-list">
-                        <!-- Gerado por JS -->
-                    </div>
-                </div>
-            </div>
-        </aside>
-
-        <!-- Área Central: A Quadra (Interactive Canvas) -->
-        <main class="flex-1 bg-slate-950 p-4 lg:p-6 flex flex-col justify-between overflow-y-auto relative h-auto lg:h-[calc(100vh-73px)]">
-            
-            <!-- Legenda Rápida da Quadra Real -->
-            <div class="bg-slate-900/90 backdrop-blur border border-slate-800 rounded-xl p-3 mb-4 flex flex-wrap items-center justify-between gap-4 text-xs">
-                <div class="flex items-center gap-4 flex-wrap">
-                    <div class="flex items-center gap-2">
-                        <div class="w-3 h-3 bg-red-600 rounded-sm"></div>
-                        <span class="text-slate-300 font-medium">Estruturas de Metal / Colunas</span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <div class="w-3 h-3 bg-amber-700/80 rounded-sm"></div>
-                        <span class="text-slate-300 font-medium">Arquibancada de Madeira</span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <div class="w-3 h-3 bg-teal-600 rounded-sm"></div>
-                        <span class="text-slate-300">Saúde</span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <div class="w-3 h-3 bg-sky-600 rounded-sm"></div>
-                        <span class="text-slate-300">Suporte</span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <div class="w-3 h-3 bg-rose-600 rounded-sm"></div>
-                        <span class="text-slate-300">iFood / Copa</span>
-                    </div>
-                </div>
-                <div class="text-[11px] text-slate-400 bg-slate-950/60 px-2.5 py-1 rounded border border-slate-800">
-                    💡 <span class="font-semibold text-rose-400">Dica:</span> Selecione um item na quadra para rotacionar, redimensionar ou remover.
-                </div>
-            </div>
-
-            <!-- Canvas Container com Zoom -->
-            <div class="flex-1 flex items-center justify-center overflow-auto p-2 bg-slate-900 rounded-2xl border border-slate-800/80 shadow-inner relative min-h-[500px]">
-                
-                <!-- O MAPA DA QUADRA -->
-                <div id="court-canvas" class="court-bg grid-overlay w-[1000px] h-[550px] rounded-lg shadow-2xl relative overflow-hidden transition-all duration-200">
-                    
-                    <!-- Arquibancada Superior (Representando a de madeira das fotos) -->
-                    <div class="absolute top-0 left-10 right-10 h-10 bg-amber-800/90 border-b-2 border-amber-950 flex items-center justify-center z-10 shadow-md">
-                        <span class="text-[10px] font-bold text-amber-100 uppercase tracking-widest"><i class="fa-solid fa-chair"></i> Bloco de Arquibancada de Madeira (Superior)</span>
-                    </div>
-
-                    <!-- Arquibancada Inferior -->
-                    <div class="absolute bottom-0 left-10 right-10 h-10 bg-amber-800/90 border-t-2 border-amber-950 flex items-center justify-center z-10 shadow-md">
-                        <span class="text-[10px] font-bold text-amber-100 uppercase tracking-widest"><i class="fa-solid fa-chair"></i> Bloco de Arquibancada de Madeira (Inferior)</span>
-                    </div>
-
-                    <!-- Colunas Vermelhas de Metal (Laterais da Quadra das Fotos) -->
-                    <!-- Lado Esquerdo -->
-                    <div class="absolute top-1/4 left-0 w-3 h-12 bg-red-600 border border-red-800 rounded shadow z-20" title="Pilar Metálico"></div>
-                    <div class="absolute top-2/4 left-0 w-3 h-12 bg-red-600 border border-red-800 rounded shadow z-20" title="Pilar Metálico"></div>
-                    <div class="absolute top-3/4 left-0 w-3 h-12 bg-red-600 border border-red-800 rounded shadow z-20" title="Pilar Metálico"></div>
-                    <!-- Lado Direito -->
-                    <div class="absolute top-1/4 right-0 w-3 h-12 bg-red-600 border border-red-800 rounded shadow z-20" title="Pilar Metálico"></div>
-                    <div class="absolute top-2/4 right-0 w-3 h-12 bg-red-600 border border-red-800 rounded shadow z-20" title="Pilar Metálico"></div>
-                    <div class="absolute top-3/4 right-0 w-3 h-12 bg-red-600 border border-red-800 rounded shadow z-20" title="Pilar Metálico"></div>
-
-                    <!-- Elementos Dinâmicos Serão Renderizados Aqui via JS -->
-                    <div id="elements-container" class="absolute inset-0 w-full h-full"></div>
-
-                </div>
-            </div>
-
-            <!-- Rodapé Técnico/Informativo -->
-            <div class="mt-4 flex flex-col sm:flex-row justify-between items-center text-xs text-slate-500 gap-2">
-                <p>Criado para Feira de Benefícios • Respeitando a proporção da quadra (1000px equivalem a aprox. 40m de comprimento real)</p>
-                <div class="flex items-center gap-2">
-                    <span class="bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/20 font-medium">Layout Auto-Salvo</span>
-                </div>
-            </div>
-        </main>
-
-        <!-- Sidebar Direita: Inspetor e Configuração de Elemento Selecionado -->
-        <aside class="w-full lg:w-80 bg-slate-900 border-l border-slate-800 flex flex-col h-auto lg:h-[calc(100vh-73px)] overflow-y-auto p-4 shrink-0">
-            <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-400 mb-4 flex items-center gap-2">
-                <i class="fa-solid fa-sliders text-rose-500"></i> Painel do Inspetor
-            </h2>
-
-            <!-- Estado Nenhum Item Selecionado -->
-            <div id="inspector-empty" class="bg-slate-950 rounded-xl border border-slate-800 p-6 text-center">
-                <div class="text-slate-600 mb-3 text-4xl">
-                    <i class="fa-solid fa-hand-pointer"></i>
-                </div>
-                <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Nenhum Stand Selecionado</h3>
-                <p class="text-[11px] text-slate-500">Clique em qualquer stand ou estrutura na quadra para editar suas propriedades físicas, rotacionar ou excluí-lo.</p>
-            </div>
-
-            <!-- Detalhes do Stand Selecionado -->
-            <div id="inspector-active" class="hidden space-y-4">
-                <div class="bg-slate-950 rounded-xl border border-blue-950/40 p-4">
-                    <div class="flex justify-between items-center mb-3">
-                        <span class="text-[10px] bg-blue-500/10 text-blue-400 px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider" id="el-category-badge">Stand</span>
-                        <button onclick="deleteSelected()" class="text-red-400 hover:text-red-300 text-xs font-semibold flex items-center gap-1 transition">
-                            <i class="fa-solid fa-trash"></i> Excluir
-                        </button>
-                    </div>
-
-                    <!-- Nome / Rótulo -->
-                    <div class="space-y-1 mb-4">
-                        <label class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Nome do Stand / Empresa</label>
-                        <input type="text" id="el-name-input" oninput="updateSelectedProperty('name', this.value)" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500 transition">
-                    </div>
-
-                    <!-- Dimensões -->
-                    <div class="grid grid-cols-2 gap-3 mb-4">
-                        <div class="space-y-1">
-                            <label class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Largura (px)</label>
-                            <input type="number" id="el-width-input" oninput="updateSelectedProperty('w', parseInt(this.value))" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-blue-500 transition" min="30" max="300">
-                        </div>
-                        <div class="space-y-1">
-                            <label class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Profundidade (px)</label>
-                            <input type="number" id="el-height-input" oninput="updateSelectedProperty('h', parseInt(this.value))" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-blue-500 transition" min="30" max="300">
-                        </div>
-                    </div>
-
-                    <!-- Rotação Slider -->
-                    <div class="space-y-1 mb-4">
-                        <div class="flex justify-between text-[10px] uppercase font-bold text-slate-400 tracking-wider">
-                            <span>Rotação Ângulo</span>
-                            <span id="el-rotation-text">0°</span>
-                        </div>
-                        <input type="range" id="el-rotation-input" min="0" max="359" oninput="updateSelectedProperty('rotation', parseInt(this.value))" class="w-full accent-blue-500 bg-slate-800 rounded-lg h-1">
-                    </div>
-
-                    <!-- Posicionamento Exato -->
-                    <div class="grid grid-cols-2 gap-3 mb-4">
-                        <div class="space-y-1">
-                            <label class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Posição X</label>
-                            <input type="number" id="el-x-input" oninput="updateSelectedProperty('x', parseInt(this.value))" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-blue-500 transition">
-                        </div>
-                        <div class="space-y-1">
-                            <label class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Posição Y</label>
-                            <input type="number" id="el-y-input" oninput="updateSelectedProperty('y', parseInt(this.value))" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-blue-500 transition">
-                        </div>
-                    </div>
-
-                    <!-- Personalização de Cores -->
-                    <div class="space-y-1">
-                        <label class="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1 block">Cor do Stand</label>
-                        <div class="flex gap-1.5 flex-wrap">
-                            <button onclick="updateSelectedProperty('color', 'bg-teal-600')" class="w-6 h-6 rounded bg-teal-600 border border-teal-400"></button>
-                            <button onclick="updateSelectedProperty('color', 'bg-sky-600')" class="w-6 h-6 rounded bg-sky-600 border border-sky-400"></button>
-                            <button onclick="updateSelectedProperty('color', 'bg-emerald-600')" class="w-6 h-6 rounded bg-emerald-600 border border-emerald-400"></button>
-                            <button onclick="updateSelectedProperty('color', 'bg-rose-600')" class="w-6 h-6 rounded bg-rose-600 border border-rose-400"></button>
-                            <button onclick="updateSelectedProperty('color', 'bg-amber-600')" class="w-6 h-6 rounded bg-amber-600 border border-amber-400"></button>
-                            <button onclick="updateSelectedProperty('color', 'bg-purple-600')" class="w-6 h-6 rounded bg-purple-600 border border-purple-400"></button>
-                            <button onclick="updateSelectedProperty('color', 'bg-slate-700')" class="w-6 h-6 rounded bg-slate-700 border border-slate-500"></button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Histórico de Versões do Layout -->
-                <div class="bg-slate-950 rounded-xl border border-slate-800 p-4">
-                    <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wide mb-3 flex items-center gap-1">
-                        <i class="fa-solid fa-history text-indigo-400"></i> Seus Layouts Salvos
-                    </h3>
-                    <div class="space-y-2 text-xs" id="saved-slots-list">
-                        <!-- Gerado por JS -->
-                    </div>
-                </div>
-            </div>
-
-            <!-- Informação das Arenas Cadastradas -->
-            <div class="mt-6 bg-slate-950/50 rounded-xl border border-slate-800/80 p-3 text-xs space-y-2">
-                <h3 class="font-bold text-slate-300 uppercase text-[10px] tracking-widest">Informações da Feira</h3>
-                <p class="text-slate-400 text-[11px] leading-relaxed">
-                    <strong>Total de Stands de Benefícios:</strong> 17 Stands.
-                </p>
-                <div class="text-[10px] text-slate-500 border-t border-slate-800/80 pt-2">
-                    A largura padrão recomendada para Stands médios é de 80px (aprox. 3.2m de largura). Para totens ou quiosques menores, use 50px.
-                </div>
-            </div>
-        </aside>
-
+        <div class="ac" data-f="support" onclick="filterArena(this,'support')">
+          <div class="ac-dot" style="background:var(--c-support)"></div>
+          <span class="ac-name">Suporte Integral</span>
+          <span class="ac-count" id="cnt-s">5</span>
+        </div>
+        <div class="ac" data-f="ifood" onclick="filterArena(this,'ifood')">
+          <div class="ac-dot" style="background:var(--c-ifood)"></div>
+          <span class="ac-name">iFood Benefícios</span>
+          <span class="ac-count" id="cnt-i">6</span>
+        </div>
+      </div>
     </div>
 
-    <!-- Script Principal Interativo -->
-    <script>
-        // Configuração dos stands passados pelo usuário
-        const INITIAL_STANDS = {
-            saude: [
-                { name: 'Wellhub', size: { w: 90, h: 70 }, color: 'bg-teal-600 border-teal-400 text-teal-100' },
-                { name: 'Bradesco Saúde', size: { w: 90, h: 70 }, color: 'bg-teal-600 border-teal-400 text-teal-100' },
-                { name: 'Unimed CNU', size: { w: 90, h: 70 }, color: 'bg-teal-600 border-teal-400 text-teal-100' },
-                { name: 'Vida Link', size: { w: 90, h: 70 }, color: 'bg-teal-600 border-teal-400 text-teal-100' },
-                { name: 'Bradesco Odonto', size: { w: 90, h: 70 }, color: 'bg-teal-600 border-teal-400 text-teal-100' },
-                { name: 'Avus', size: { w: 80, h: 60 }, color: 'bg-teal-600 border-teal-400 text-teal-100' },
-                { name: 'Meu Pet', size: { w: 80, h: 60 }, color: 'bg-teal-600 border-teal-400 text-teal-100' }
-            ],
-            suporte: [
-                { name: 'Stay', size: { w: 90, h: 70 }, color: 'bg-sky-600 border-sky-400 text-sky-100' },
-                { name: 'Leggal', size: { w: 90, h: 70 }, color: 'bg-sky-600 border-sky-400 text-sky-100' },
-                { name: 'Travel Cash', size: { w: 90, h: 70 }, color: 'bg-sky-600 border-sky-400 text-sky-100' },
-                { name: 'New Value', size: { w: 90, h: 70 }, color: 'bg-sky-600 border-sky-400 text-sky-100' },
-                { name: 'Toten Benício', size: { w: 60, h: 60 }, color: 'bg-sky-600 border-sky-400 text-sky-100' }
-            ],
-            ifood: [
-                { name: 'iFood VA/VR ⚽', size: { w: 100, h: 80 }, color: 'bg-rose-600 border-yellow-400 text-white' },
-                { name: 'iFood Cultura ⚽', size: { w: 100, h: 80 }, color: 'bg-rose-600 border-yellow-400 text-white' },
-                { name: 'iFood Mobilidade ⚽', size: { w: 100, h: 80 }, color: 'bg-rose-600 border-yellow-400 text-white' },
-                { name: 'iFood Farmácia ⚽', size: { w: 100, h: 80 }, color: 'bg-rose-600 border-yellow-400 text-white' },
-                { name: 'iFood Saldo Livre ⚽', size: { w: 100, h: 80 }, color: 'bg-rose-600 border-yellow-400 text-white' },
-                { name: 'Time de Benefícios Corretora ⚽', size: { w: 110, h: 80 }, color: 'bg-amber-600 border-yellow-400 text-white' }
-            ],
-            extras: [
-                { name: 'Palco Principal', size: { w: 180, h: 100 }, color: 'bg-slate-700 border-slate-500 text-white' },
-                { name: 'Entrada / Credenciamento', size: { w: 140, h: 60 }, color: 'bg-emerald-700 border-emerald-500 text-white' },
-                { name: 'Mesa Redonda', size: { w: 70, h: 70 }, color: 'bg-slate-700 border-slate-500 text-white rounded-full' },
-                { name: 'Pilar de Apoio Extra', size: { w: 40, h: 40 }, color: 'bg-red-800 border-red-500 text-white' },
-                { name: 'Praça de Alimentação', size: { w: 150, h: 90 }, color: 'bg-amber-800 border-amber-600 text-white' }
-            ]
-        };
+    <div>
+      <div class="s-title">Stands</div>
+      <div class="stand-list" id="sidebar-stands"></div>
+    </div>
 
-        // Estado Global da Aplicação
-        let activeElements = [];
-        let selectedElementId = null;
-        let isGridEnabled = true;
-        const GRID_SIZE = 10;
+    <div class="info-box">
+      <strong>⚡ Como usar</strong>
+      <b>Arraste</b> para reposicionar.<br>
+      <b>Botão direito</b> → renomear, trocar arena ou remover.<br>
+      <b>⇄ Trocar</b> → clique em 2 stands para trocar posições.<br>
+      Filtros acima para destacar grupos.
+    </div>
+  </aside>
 
-        // Configurações do Drag and Drop
-        let isDragging = false;
-        let dragTarget = null;
-        let dragOffsetX = 0;
-        let dragOffsetY = 0;
+  <main>
+    <div class="toolbar">
+      <div class="zoom-row">
+        <button class="zbtn" onclick="adjustZoom(-0.1)">−</button>
+        <span class="zlabel" id="zlabel">100%</span>
+        <button class="zbtn" onclick="adjustZoom(0.1)">+</button>
+        <button class="zbtn" onclick="resetZoom()" title="Fit" style="font-size:9.5px">⊡</button>
+      </div>
+      <div class="tsep"></div>
+      <div class="mode-row">
+        <button class="mbtn active" id="mb-move" onclick="setMode('move')">✥ Mover</button>
+        <button class="mbtn" id="mb-view" onclick="setMode('view')">👁 Visualizar</button>
+      </div>
+      <div class="tsep"></div>
+      <span class="toolbar-hint">Arraste · Botão direito para opções</span>
+      <span class="swap-hint" id="swap-hint">⇄ Clique no 1º stand a trocar...</span>
+    </div>
 
-        // Inicialização da Aplicação
-        window.onload = function() {
-            renderSidebarLists();
-            loadFromBrowser(); // Tenta carregar o último layout salvo
-            renderCanvas();
-            renderSavedSlots();
-        };
+    <div class="canvas-wrap" id="canvas-wrap">
+      <div class="court-scene" id="court-scene">
+        <div class="court-body">
+          <div class="goal goal-l"></div>
+          <div id="court">
+            <div class="cm-v" style="left:50%;top:5%;height:90%"></div>
+            <div class="cm-circle" style="left:calc(50% - 48px);top:calc(50% - 48px);width:96px;height:96px"></div>
+            <div class="pen-area pen-l"></div>
+            <div class="pen-area pen-r"></div>
+            <div class="copa-strip">⚽ TIME DE BENEFÍCIOS · CLIMA DE COPA DO MUNDO ⚽</div>
+          </div>
+          <div class="goal goal-r"></div>
+        </div>
+        <div class="arquibancada">
+          <div class="arquib-rows" id="arquib-rows"></div>
+          <div class="arquib-label">Arquibancada</div>
+        </div>
+      </div>
+    </div>
 
-        // Renderiza a lista de stands que podem ser adicionados
-        function renderSidebarLists() {
-            const renderItem = (item, cat) => `
-                <button onclick="addElement('${item.name}', ${item.size.w}, ${item.size.h}, '${item.color}', '${cat}')" 
-                        class="w-full text-left bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-slate-200 text-xs px-3 py-2.5 rounded-lg font-medium transition flex items-center justify-between group">
-                    <span class="truncate flex items-center gap-1.5">
-                        <i class="fa-solid fa-plus text-[10px] text-slate-500 group-hover:text-white transition"></i>
-                        ${item.name}
-                    </span>
-                    <span class="text-[9px] text-slate-500 group-hover:text-slate-300 font-mono">${item.size.w}x${item.size.h}</span>
-                </button>
-            `;
+    <div class="statusbar">
+      <span><span class="sdot"></span>Edição ativa</span>
+      <span id="pos-st">–</span>
+      <span id="sel-st">Nenhum selecionado</span>
+    </div>
+  </main>
+</div>
 
-            document.getElementById('arena-saude-list').innerHTML = INITIAL_STANDS.saude.map(i => renderItem(i, 'saude')).join('');
-            document.getElementById('arena-suporte-list').innerHTML = INITIAL_STANDS.suporte.map(i => renderItem(i, 'suporte')).join('');
-            document.getElementById('arena-ifood-list').innerHTML = INITIAL_STANDS.ifood.map(i => renderItem(i, 'ifood')).join('');
-            document.getElementById('extra-items-list').innerHTML = INITIAL_STANDS.extras.map(i => renderItem(i, 'extras')).join('');
-        }
+<!-- TOOLTIP -->
+<div id="tt"><div class="tname" id="tt-name"></div><div class="tarena" id="tt-arena"></div></div>
 
-        // Adiciona um elemento ao layout da quadra no centro
-        function addElement(name, w, h, color, category) {
-            const canvas = document.getElementById('court-canvas');
-            const canvasW = canvas.clientWidth;
-            const canvasH = canvas.clientHeight;
-            
-            // Centraliza o novo elemento respeitando a grade
-            let startX = Math.round((canvasW / 2 - w / 2) / GRID_SIZE) * GRID_SIZE;
-            let startY = Math.round((canvasH / 2 - h / 2) / GRID_SIZE) * GRID_SIZE;
+<!-- CTX -->
+<div id="ctx">
+  <div class="ci" onclick="ctxRename()">✏️ Renomear</div>
+  <div class="ci" onclick="ctxArena()">🎨 Trocar arena/cor</div>
+  <div class="csep"></div>
+  <div class="ci del" onclick="ctxDelete()">🗑️ Remover</div>
+</div>
 
-            const newElement = {
-                id: 'el_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
-                name: name,
-                category: category,
-                x: startX,
-                y: startY,
-                w: w,
-                h: h,
-                rotation: 0,
-                color: color
-            };
+<!-- ADD MODAL -->
+<div class="overlay" id="addModal">
+  <div class="modal">
+    <h2>Novo Stand</h2>
+    <div class="fg"><label>Nome</label><input id="ns-name" placeholder="Ex: Gympass"></div>
+    <div class="fg">
+      <label>Arena</label>
+      <select id="ns-arena">
+        <option value="health">Saúde e Bem-Estar</option>
+        <option value="support">Suporte Integral</option>
+        <option value="ifood">iFood Benefícios</option>
+      </select>
+    </div>
+    <div class="fg"><label>Ícone (emoji)</label><input id="ns-icon" placeholder="📋" maxlength="2" value="📋"></div>
+    <div class="mact">
+      <button class="bcan" onclick="closeModal('addModal')">Cancelar</button>
+      <button class="bconf" onclick="confirmAdd()">Adicionar</button>
+    </div>
+  </div>
+</div>
 
-            activeElements.push(newElement);
-            selectElement(newElement.id);
-            renderCanvas();
-            autoSave();
-        }
+<!-- RENAME MODAL -->
+<div class="overlay" id="renameModal">
+  <div class="modal">
+    <h2>Renomear Stand</h2>
+    <div class="fg"><label>Novo nome</label><input id="rn-input"></div>
+    <div class="mact">
+      <button class="bcan" onclick="closeModal('renameModal')">Cancelar</button>
+      <button class="bconf" onclick="confirmRename()">Salvar</button>
+    </div>
+  </div>
+</div>
 
-        // Renderiza todos os elementos na quadra
-        function renderCanvas() {
-            const container = document.getElementById('elements-container');
-            container.innerHTML = '';
+<!-- ARENA / COR MODAL -->
+<div class="overlay" id="arenaModal">
+  <div class="modal">
+    <h2>Trocar Arena</h2>
+    <p style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:12px">Escolha a arena para <b id="am-sname" style="color:#fff"></b></p>
+    <div class="arena-options">
+      <div class="ao" data-v="health" onclick="selectArenaOpt(this)">
+        <div class="ao-dot" style="background:var(--c-health)"></div>
+        <span class="ao-label">Saúde e Bem-Estar</span>
+      </div>
+      <div class="ao" data-v="support" onclick="selectArenaOpt(this)">
+        <div class="ao-dot" style="background:var(--c-support)"></div>
+        <span class="ao-label">Suporte Integral</span>
+      </div>
+      <div class="ao" data-v="ifood" onclick="selectArenaOpt(this)">
+        <div class="ao-dot" style="background:var(--c-ifood)"></div>
+        <span class="ao-label">iFood Benefícios</span>
+      </div>
+    </div>
+    <div class="mact">
+      <button class="bcan" onclick="closeModal('arenaModal')">Cancelar</button>
+      <button class="bconf" onclick="confirmArena()">Confirmar</button>
+    </div>
+  </div>
+</div>
 
-            activeElements.forEach(el => {
-                const isSelected = el.id === selectedElementId;
-                const isRound = el.color.includes('rounded-full');
-                
-                const elementDiv = document.createElement('div');
-                elementDiv.id = el.id;
-                elementDiv.className = `absolute select-none cursor-move flex flex-col justify-between items-center p-2 border-2 text-center shadow-lg transition-shadow duration-150 ${el.color} ${isSelected ? 'stand-selected' : ''}`;
-                
-                // Aplicar estilo de círculo se definido
-                if (isRound) {
-                    elementDiv.style.borderRadius = '50%';
-                } else {
-                    elementDiv.style.borderRadius = '8px';
-                }
+<script>
+/* ═══════════════════════════════════════
+   ARENA META
+═══════════════════════════════════════ */
+const ARENA_META = {
+  health:  { label:'Saúde e Bem-Estar', color:'#00A878' },
+  support: { label:'Suporte Integral',  color:'#4361EE' },
+  ifood:   { label:'iFood Benefícios',  color:'#EA1D2C' }
+};
 
-                elementDiv.style.width = `${el.w}px`;
-                elementDiv.style.height = `${el.h}px`;
-                elementDiv.style.left = `${el.x}px`;
-                elementDiv.style.top = `${el.y}px`;
-                elementDiv.style.transform = `rotate(${el.rotation}deg)`;
-                elementDiv.style.zIndex = isSelected ? '40' : '30';
+/* ═══════════════════════════════════════
+   STANDS DATA — absolute coords on court
+═══════════════════════════════════════ */
+let stands = [];
 
-                // Conteúdo Visual do Stand/Elemento
-                let categoryBadge = '';
-                if (el.category === 'ifood') {
-                    categoryBadge = `<span class="text-[8px] bg-yellow-400 text-slate-900 px-1 py-0.2 rounded font-bold uppercase tracking-widest">iFood</span>`;
-                } else if (el.category === 'saude') {
-                    categoryBadge = `<span class="text-[8px] bg-teal-800 text-teal-100 px-1 py-0.2 rounded font-bold uppercase tracking-widest">Saúde</span>`;
-                } else if (el.category === 'suporte') {
-                    categoryBadge = `<span class="text-[8px] bg-sky-800 text-sky-100 px-1 py-0.2 rounded font-bold uppercase tracking-widest">Suporte</span>`;
-                }
+function mkStands() {
+  stands = [
+    /* ── HEALTH — left third ── */
+    { id:'h1', name:'Wellhub',           arena:'health',  icon:'💪', x:16,  y:28,  w:128, h:90 },
+    { id:'h2', name:'Bradesco Saúde',    arena:'health',  icon:'❤️', x:152, y:28,  w:128, h:90 },
+    { id:'h3', name:'Unimed CNU',        arena:'health',  icon:'🏥', x:16,  y:128, w:128, h:90 },
+    { id:'h4', name:'Vida Link',         arena:'health',  icon:'🔗', x:152, y:128, w:128, h:90 },
+    { id:'h5', name:'Bradesco Odonto',   arena:'health',  icon:'🦷', x:16,  y:228, w:128, h:90 },
+    { id:'h6', name:'Avus',              arena:'health',  icon:'🚗', x:152, y:228, w:128, h:90 },
+    { id:'h7', name:'Meu Pet',           arena:'health',  icon:'🐾', x:16,  y:328, w:128, h:90 },
+    { id:'h8', name:'Sua saúde em dia',  arena:'health',  icon:'🌿', x:152, y:328, w:128, h:90 },
 
-                elementDiv.innerHTML = `
-                    <div class="w-full flex justify-between items-center gap-1">
-                        ${categoryBadge}
-                        <span class="text-[9px] font-mono text-white/50">${el.w}x${el.h}</span>
-                    </div>
-                    <div class="text-[11px] font-bold leading-tight px-1 w-full truncate my-auto" title="${el.name}">
-                        ${el.name}
-                    </div>
-                    <div class="text-[9px] font-bold text-white/70">
-                        ${el.rotation !== 0 ? `${el.rotation}°` : ''}
-                    </div>
-                `;
+    /* ── SUPPORT — middle ── */
+    { id:'s1', name:'Stay',              arena:'support', icon:'🏠', x:310, y:28,  w:162, h:90 },
+    { id:'s2', name:'Leggal',            arena:'support', icon:'⚖️', x:310, y:128, w:162, h:90 },
+    { id:'s3', name:'New Value',         arena:'support', icon:'💎', x:310, y:228, w:162, h:90 },
+    { id:'s4', name:'Toten Benício',     arena:'support', icon:'🤝', x:310, y:328, w:162, h:90 },
+    { id:'s5', name:'Sesc',              arena:'support', icon:'🎭', x:310, y:418, w:162, h:62 },
 
-                // Eventos de Mouse/Touch para arrastar
-                elementDiv.addEventListener('mousedown', (e) => startDrag(e, el.id));
-                elementDiv.addEventListener('touchstart', (e) => startDrag(e, el.id), { passive: true });
+    /* ── IFOOD — right third ── */
+    { id:'i1', name:'VA / VR',           arena:'ifood',   icon:'🍽️', x:500, y:28,  w:118, h:138 },
+    { id:'i2', name:'Cultura',           arena:'ifood',   icon:'📚', x:628, y:28,  w:118, h:138 },
+    { id:'i3', name:'Mobilidade',        arena:'ifood',   icon:'🚌', x:756, y:28,  w:128, h:138 },
+    { id:'i4', name:'Farmácia',          arena:'ifood',   icon:'💊', x:500, y:178, w:118, h:138 },
+    { id:'i5', name:'Saldo Livre',       arena:'ifood',   icon:'💳', x:628, y:178, w:118, h:138 },
+    { id:'i6', name:'Corretora',         arena:'ifood',   icon:'🏆', x:756, y:178, w:128, h:138 },
+  ];
+}
 
-                container.appendChild(elementDiv);
-            });
-        }
+/* ═══════════════════════════════════════
+   STATE
+═══════════════════════════════════════ */
+let selId       = null;
+let ctxId       = null;
+let zoom        = 1;
+let mode        = 'move';
+let swapMode    = false;
+let swapFirst   = null;
+let curFilter   = 'all';
+let selArenaOpt = null;
 
-        // Funções de Arrastar e Posicionar (Drag and Drop)
-        function startDrag(e, elementId) {
-            e.stopPropagation();
-            selectElement(elementId);
+/* ═══════════════════════════════════════
+   RENDER
+═══════════════════════════════════════ */
+function render() {
+  const court = document.getElementById('court');
+  court.querySelectorAll('.stand').forEach(e => e.remove());
 
-            const el = activeElements.find(item => item.id === elementId);
-            if (!el) return;
+  const classMap = { health:'h', support:'s', ifood:'i' };
 
-            isDragging = true;
-            dragTarget = elementId;
+  stands.forEach(s => {
+    const el = document.createElement('div');
+    el.className = `stand ${classMap[s.arena]}`;
+    el.id = `st-${s.id}`;
+    el.style.cssText = `left:${s.x}px;top:${s.y}px;width:${s.w}px;height:${s.h}px;`;
+    el.innerHTML = `<div class="stand-icon">${s.icon}</div><div class="stand-name">${s.name}</div>`;
 
-            const clientX = e.type.startsWith('touch') ? e.touches[0].clientX : e.clientX;
-            const clientY = e.type.startsWith('touch') ? e.touches[0].clientY : e.clientY;
+    if (s.id === selId)      el.classList.add('selected');
+    if (s.id === swapFirst)  el.classList.add('swap-pick');
+    if (curFilter !== 'all' && s.arena !== curFilter) el.classList.add('dim');
 
-            dragOffsetX = clientX - el.x;
-            dragOffsetY = clientY - el.y;
+    el.addEventListener('mousedown',   e => onMD(e, s.id));
+    el.addEventListener('mouseenter',  e => showTT(e, s));
+    el.addEventListener('mouseleave',  hideTT);
+    el.addEventListener('contextmenu', e => showCtx(e, s.id));
+    el.addEventListener('click',       e => onClick(e, s.id));
+    court.appendChild(el);
+  });
 
-            document.addEventListener('mousemove', dragMove);
-            document.addEventListener('touchmove', dragMove, { passive: false });
-            document.addEventListener('mouseup', stopDrag);
-            document.addEventListener('touchend', stopDrag);
-        }
+  renderSidebar();
+  updateCounts();
+}
 
-        function dragMove(e) {
-            if (!isDragging || !dragTarget) return;
+function renderSidebar() {
+  const list = document.getElementById('sidebar-stands');
+  list.innerHTML = '';
+  stands.forEach(s => {
+    const d = document.createElement('div');
+    d.className = 's-chip';
+    d.innerHTML = `<div class="chip-dot" style="background:${ARENA_META[s.arena].color}"></div>${s.icon} ${s.name}`;
+    d.addEventListener('click', () => {
+      if (swapMode) { handleSwap(s.id); return; }
+      selectStand(s.id);
+      document.getElementById(`st-${s.id}`)?.scrollIntoView({block:'center',behavior:'smooth'});
+    });
+    list.appendChild(d);
+  });
+}
 
-            // Previne scroll do touch em celulares enquanto arrasta
-            if (e.cancelable) e.preventDefault();
+function updateCounts() {
+  document.getElementById('cnt-all').textContent = stands.length;
+  document.getElementById('cnt-h').textContent   = stands.filter(x=>x.arena==='health').length;
+  document.getElementById('cnt-s').textContent   = stands.filter(x=>x.arena==='support').length;
+  document.getElementById('cnt-i').textContent   = stands.filter(x=>x.arena==='ifood').length;
+}
 
-            const canvas = document.getElementById('court-canvas');
-            const el = activeElements.find(item => item.id === dragTarget);
-            if (!el) return;
+/* ═══════════════════════════════════════
+   DRAG
+═══════════════════════════════════════ */
+let dragId=null, dsx, dsy, dox, doy;
 
-            const clientX = e.type.startsWith('touch') ? e.touches[0].clientX : e.clientX;
-            const clientY = e.type.startsWith('touch') ? e.touches[0].clientY : e.clientY;
+function onMD(e, id) {
+  if (swapMode || mode !== 'move' || e.button !== 0) return;
+  e.preventDefault();
+  dragId = id;
+  const s = stands.find(x=>x.id===id);
+  dox = s.x; doy = s.y;
+  dsx = e.clientX/zoom; dsy = e.clientY/zoom;
+  document.getElementById(`st-${id}`)?.classList.add('dragging');
+  selectStand(id);
+}
 
-            let newX = clientX - dragOffsetX;
-            let newY = clientY - dragOffsetY;
+document.addEventListener('mousemove', e => {
+  if (!dragId) return;
+  const dx = e.clientX/zoom - dsx, dy = e.clientY/zoom - dsy;
+  const el = document.getElementById(`st-${dragId}`);
+  if (el) { el.style.left=(dox+dx)+'px'; el.style.top=(doy+dy)+'px'; }
+  document.getElementById('pos-st').textContent = `x:${Math.round(dox+dx)} y:${Math.round(doy+dy)}`;
+});
 
-            // Restringe o movimento dentro da quadra
-            const maxX = canvas.clientWidth - el.w;
-            const maxY = canvas.clientHeight - el.h;
+document.addEventListener('mouseup', () => {
+  if (!dragId) return;
+  const el = document.getElementById(`st-${dragId}`);
+  if (el) {
+    el.classList.remove('dragging');
+    const s = stands.find(x=>x.id===dragId);
+    s.x = parseInt(el.style.left);
+    s.y = parseInt(el.style.top);
+  }
+  dragId = null;
+  render();
+});
 
-            newX = Math.max(0, Math.min(newX, maxX));
-            newY = Math.max(0, Math.min(newY, maxY));
+/* ═══════════════════════════════════════
+   CLICK / SELECT
+═══════════════════════════════════════ */
+function onClick(e, id) {
+  e.stopPropagation();
+  if (swapMode) { handleSwap(id); return; }
+  selectStand(id);
+}
 
-            // Aplica Snap to Grid se ativo
-            if (isGridEnabled) {
-                newX = Math.round(newX / GRID_SIZE) * GRID_SIZE;
-                newY = Math.round(newY / GRID_SIZE) * GRID_SIZE;
-            }
+function selectStand(id) {
+  selId = id;
+  const s = stands.find(x=>x.id===id);
+  document.getElementById('sel-st').textContent = s ? `${s.icon} ${s.name} · ${ARENA_META[s.arena].label}` : 'Nenhum selecionado';
+  render();
+}
 
-            el.x = newX;
-            el.y = newY;
+document.getElementById('court').addEventListener('click', e => {
+  if (e.target === e.currentTarget) { selId=null; document.getElementById('sel-st').textContent='Nenhum selecionado'; render(); }
+});
 
-            // Atualiza fisicamente no DOM para alto desempenho
-            const elementDom = document.getElementById(dragTarget);
-            if (elementDom) {
-                elementDom.style.left = `${newX}px`;
-                elementDom.style.top = `${newY}px`;
-            }
+/* ═══════════════════════════════════════
+   SWAP MODE
+═══════════════════════════════════════ */
+function toggleSwapMode() {
+  swapMode = !swapMode;
+  swapFirst = null;
+  document.getElementById('swap-btn').classList.toggle('active', swapMode);
+  document.getElementById('swap-hint').classList.toggle('on', swapMode);
+  document.getElementById('swap-hint').textContent = swapMode ? '⇄ Clique no 1º stand a trocar...' : '';
+  if (!swapMode) render();
+}
 
-            // Atualiza inputs no painel
-            document.getElementById('el-x-input').value = newX;
-            document.getElementById('el-y-input').value = newY;
-        }
+function handleSwap(id) {
+  if (!swapFirst) {
+    swapFirst = id;
+    document.getElementById('swap-hint').textContent = '⇄ Agora clique no 2º stand...';
+    render();
+  } else {
+    if (swapFirst === id) { swapFirst=null; render(); return; }
+    // swap positions
+    const a = stands.find(x=>x.id===swapFirst);
+    const b = stands.find(x=>x.id===id);
+    [a.x, b.x] = [b.x, a.x];
+    [a.y, b.y] = [b.y, a.y];
+    [a.w, b.w] = [b.w, a.w];
+    [a.h, b.h] = [b.h, a.h];
+    swapFirst = null;
+    swapMode  = false;
+    document.getElementById('swap-btn').classList.remove('active');
+    document.getElementById('swap-hint').classList.remove('on');
+    render();
+  }
+}
 
-        function stopDrag() {
-            if (isDragging) {
-                isDragging = false;
-                dragTarget = null;
-                document.removeEventListener('mousemove', dragMove);
-                document.removeEventListener('touchmove', dragMove);
-                document.removeEventListener('mouseup', stopDrag);
-                document.removeEventListener('touchend', stopDrag);
-                autoSave();
-            }
-        }
+/* ═══════════════════════════════════════
+   TOOLTIP
+═══════════════════════════════════════ */
+const tt = document.getElementById('tt');
+function showTT(e, s) {
+  document.getElementById('tt-name').textContent  = `${s.icon} ${s.name}`;
+  document.getElementById('tt-arena').textContent = ARENA_META[s.arena].label;
+  tt.classList.add('on');
+}
+function hideTT() { tt.classList.remove('on'); }
+document.addEventListener('mousemove', e => { tt.style.left=(e.clientX+14)+'px'; tt.style.top=(e.clientY-10)+'px'; });
 
-        // Seleciona um stand específico e carrega suas propriedades no inspetor
-        function selectElement(id) {
-            selectedElementId = id;
-            
-            // Remove realce anterior e adiciona no novo
-            document.querySelectorAll('#elements-container > div').forEach(div => {
-                div.classList.remove('stand-selected');
-            });
+/* ═══════════════════════════════════════
+   CTX MENU
+═══════════════════════════════════════ */
+const ctx = document.getElementById('ctx');
+function showCtx(e, id) {
+  e.preventDefault(); e.stopPropagation();
+  ctxId = id;
+  ctx.style.left=e.clientX+'px'; ctx.style.top=e.clientY+'px';
+  ctx.style.display='block';
+  selectStand(id);
+}
+document.addEventListener('click', () => ctx.style.display='none');
 
-            const el = activeElements.find(item => item.id === id);
-            if (el) {
-                const elDom = document.getElementById(id);
-                if (elDom) elDom.classList.add('stand-selected');
+function ctxRename() {
+  ctx.style.display='none';
+  const s = stands.find(x=>x.id===ctxId); if(!s) return;
+  document.getElementById('rn-input').value = s.name;
+  openModal('renameModal');
+}
+function ctxArena() {
+  ctx.style.display='none';
+  const s = stands.find(x=>x.id===ctxId); if(!s) return;
+  document.getElementById('am-sname').textContent = s.name;
+  selArenaOpt = s.arena;
+  document.querySelectorAll('.ao').forEach(el => {
+    el.classList.toggle('sel', el.dataset.v === s.arena);
+  });
+  openModal('arenaModal');
+}
+function ctxDelete() {
+  ctx.style.display='none';
+  stands = stands.filter(x=>x.id!==ctxId);
+  if(selId===ctxId) selId=null;
+  render();
+}
 
-                // Preencher painel do inspetor
-                document.getElementById('inspector-empty').classList.add('hidden');
-                document.getElementById('inspector-active').classList.remove('hidden');
+/* ═══════════════════════════════════════
+   FILTER
+═══════════════════════════════════════ */
+function filterArena(el, f) {
+  curFilter = f;
+  document.querySelectorAll('.ac').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  render();
+}
 
-                document.getElementById('el-category-badge').innerText = el.category ? el.category.toUpperCase() : 'STAND';
-                document.getElementById('el-name-input').value = el.name;
-                document.getElementById('el-width-input').value = el.w;
-                document.getElementById('el-height-input').value = el.h;
-                document.getElementById('el-rotation-input').value = el.rotation;
-                document.getElementById('el-rotation-text').innerText = `${el.rotation}°`;
-                document.getElementById('el-x-input').value = el.x;
-                document.getElementById('el-y-input').value = el.y;
-            } else {
-                document.getElementById('inspector-empty').classList.remove('hidden');
-                document.getElementById('inspector-active').classList.add('hidden');
-            }
-        }
+/* ═══════════════════════════════════════
+   ZOOM / MODE
+═══════════════════════════════════════ */
+function adjustZoom(d) {
+  zoom = Math.max(.3, Math.min(2, zoom+d));
+  document.getElementById('court-scene').style.transform = `scale(${zoom})`;
+  document.getElementById('zlabel').textContent = Math.round(zoom*100)+'%';
+}
+function resetZoom() { zoom=1; adjustZoom(0); }
+function setMode(m) {
+  mode = m;
+  document.getElementById('mb-move').classList.toggle('active', m==='move');
+  document.getElementById('mb-view').classList.toggle('active', m==='view');
+}
 
-        // Deselecionar se clicar fora
-        document.getElementById('court-canvas').addEventListener('mousedown', function(e) {
-            if (e.target === this || e.target.id === 'elements-container') {
-                selectedElementId = null;
-                selectElement(null);
-            }
-        });
+/* ═══════════════════════════════════════
+   MODALS
+═══════════════════════════════════════ */
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 
-        // Atualiza propriedades do objeto selecionado diretamente do Inspetor
-        function updateSelectedProperty(property, value) {
-            if (!selectedElementId) return;
-            const el = activeElements.find(item => item.id === selectedElementId);
-            if (!el) return;
+function selectArenaOpt(el) {
+  document.querySelectorAll('.ao').forEach(e=>e.classList.remove('sel'));
+  el.classList.add('sel');
+  selArenaOpt = el.dataset.v;
+}
+function confirmArena() {
+  const s = stands.find(x=>x.id===ctxId);
+  if (s && selArenaOpt) s.arena = selArenaOpt;
+  closeModal('arenaModal'); render();
+}
+function confirmRename() {
+  const s = stands.find(x=>x.id===ctxId);
+  const n = document.getElementById('rn-input').value.trim();
+  if (s && n) s.name = n;
+  closeModal('renameModal'); render();
+}
+function confirmAdd() {
+  const name  = document.getElementById('ns-name').value.trim();
+  const arena = document.getElementById('ns-arena').value;
+  const icon  = document.getElementById('ns-icon').value.trim() || '📋';
+  if (!name) return;
+  stands.push({ id:'u'+Date.now(), name, arena, icon, x:60, y:420, w:130, h:70 });
+  closeModal('addModal');
+  document.getElementById('ns-name').value='';
+  render();
+}
 
-            // Restrições de valores mínimos e máximos para segurança
-            if (property === 'w') value = Math.max(30, Math.min(value || 30, 400));
-            if (property === 'h') value = Math.max(30, Math.min(value || 30, 400));
-            if (property === 'rotation') {
-                value = value % 360;
-                document.getElementById('el-rotation-text').innerText = `${value}°`;
-            }
+/* ═══════════════════════════════════════
+   RESET / EXPORT
+═══════════════════════════════════════ */
+function resetLayout() {
+  if (!confirm('Resetar layout para o padrão?')) return;
+  mkStands(); curFilter='all'; selId=null; swapMode=false; swapFirst=null;
+  document.querySelectorAll('.ac').forEach(c=>c.classList.remove('active'));
+  document.querySelector('.ac[data-f="all"]').classList.add('active');
+  document.getElementById('swap-btn').classList.remove('active');
+  document.getElementById('swap-hint').classList.remove('on');
+  render();
+}
+function exportJSON() {
+  const blob = new Blob([JSON.stringify(stands,null,2)],{type:'application/json'});
+  const a = document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download='layout_feira_beneficios.json'; a.click();
+}
 
-            // Aplicar alteração de cor mantendo compatibilidade com categorias
-            if (property === 'color') {
-                el.color = value + " border-white text-white";
-            } else {
-                el[property] = value;
-            }
+/* ═══════════════════════════════════════
+   ARQUIBANCADA
+═══════════════════════════════════════ */
+function buildArquib() {
+  const w = document.getElementById('arquib-rows');
+  for(let i=0;i<21;i++){ const d=document.createElement('div'); d.className='arquib-row'; w.appendChild(d); }
+}
 
-            renderCanvas();
-            autoSave();
-        }
-
-        // Exclui o item selecionado
-        function deleteSelected() {
-            if (!selectedElementId) return;
-            activeElements = activeElements.filter(item => item.id !== selectedElementId);
-            selectedElementId = null;
-            selectElement(null);
-            renderCanvas();
-            autoSave();
-        }
-
-        // Limpa totalmente o canvas de stands criados pelo usuário
-        function clearCanvas() {
-            if (confirm("Deseja realmente remover todos os stands e limpar a quadra?")) {
-                activeElements = [];
-                selectedElementId = null;
-                selectElement(null);
-                renderCanvas();
-                autoSave();
-            }
-        }
-
-        // Ativa ou desativa o alinhamento de grade
-        function toggleGrid() {
-            isGridEnabled = !isGridEnabled;
-            const canvas = document.getElementById('court-canvas');
-            if (isGridEnabled) {
-                canvas.classList.add('grid-overlay');
-            } else {
-                canvas.classList.remove('grid-overlay');
-            }
-        }
-
-        // ---- EXPORTAÇÃO E SALVAMENTO ----
-
-        // Auto-salva no LocalStorage no slot "current" para evitar perda de dados
-        function autoSave() {
-            localStorage.setItem('layout_quadra_current', JSON.stringify(activeElements));
-        }
-
-        // Carrega o auto-salvamento se houver
-        function loadFromBrowser() {
-            const saved = localStorage.getItem('layout_quadra_current');
-            if (saved) {
-                try {
-                    activeElements = JSON.parse(saved);
-                } catch(e) {
-                    activeElements = [];
-                }
-            }
-        }
-
-        // Exporta o arquivo JSON com a configuração do mapa de stands
-        function exportLayout() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(activeElements, null, 2));
-            const downloadAnchor = document.createElement('a');
-            downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", "layout_feira_beneficios_quadra.json");
-            document.body.appendChild(downloadAnchor);
-            downloadAnchor.click();
-            downloadAnchor.remove();
-        }
-
-        // Dispara o seletor de arquivos oculto para importação
-        function triggerImport() {
-            document.getElementById('importFile').click();
-        }
-
-        // Importa layout de arquivo JSON
-        function importLayout(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const imported = JSON.parse(e.target.result);
-                    if (Array.isArray(imported)) {
-                        activeElements = imported;
-                        selectedElementId = null;
-                        selectElement(null);
-                        renderCanvas();
-                        autoSave();
-                        alert("Layout importado com sucesso para a quadra!");
-                    } else {
-                        alert("Arquivo inválido. Formato JSON incompatível.");
-                    }
-                } catch (err) {
-                    alert("Erro ao ler o arquivo JSON.");
-                }
-            };
-            reader.readAsText(file);
-        }
-
-        // Salva uma versão nomeada no navegador do usuário
-        function saveToBrowser() {
-            const name = prompt("Dê um nome para esta versão do layout (ex: Opção A, Configuração Final):");
-            if (!name) return;
-
-            const slotId = 'layout_quadra_' + Date.now();
-            const slotData = {
-                id: slotId,
-                name: name,
-                date: new Date().toLocaleDateString('pt-BR', {hour: '2-digit', minute:'2-digit'}),
-                elements: activeElements
-            };
-
-            // Salvar no dicionário de slots salvos
-            let slots = JSON.parse(localStorage.getItem('layout_quadra_slots') || '[]');
-            slots.push(slotData);
-            localStorage.setItem('layout_quadra_slots', JSON.stringify(slots));
-
-            renderSavedSlots();
-        }
-
-        // Renderiza a lista de versões salvas no painel lateral
-        function renderSavedSlots() {
-            const container = document.getElementById('saved-slots-list');
-            if (!container) return;
-
-            const slots = JSON.parse(localStorage.getItem('layout_quadra_slots') || '[]');
-            if (slots.length === 0) {
-                container.innerHTML = `<p class="text-slate-500 text-[11px]">Nenhuma versão salva localmente.</p>`;
-                return;
-            }
-
-            container.innerHTML = slots.map(slot => `
-                <div class="bg-slate-900 border border-slate-800 p-2 rounded-lg flex justify-between items-center gap-1">
-                    <div class="truncate pr-1">
-                        <p class="font-semibold text-slate-200 truncate text-[11px]">${slot.name}</p>
-                        <p class="text-[9px] text-slate-500">${slot.date}</p>
-                    </div>
-                    <div class="flex gap-1 shrink-0">
-                        <button onclick="loadSlot('${slot.id}')" class="bg-indigo-900/60 hover:bg-indigo-800/80 text-indigo-200 px-1.5 py-1 rounded text-[10px] transition" title="Carregar">
-                            <i class="fa-solid fa-folder-open"></i>
-                        </button>
-                        <button onclick="deleteSlot('${slot.id}')" class="bg-red-950/40 hover:bg-red-900/50 text-red-400 px-1.5 py-1 rounded text-[10px] transition" title="Excluir">
-                            <i class="fa-solid fa-trash-can"></i>
-                        </button>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        // Carrega um slot salvo
-        function loadSlot(slotId) {
-            const slots = JSON.parse(localStorage.getItem('layout_quadra_slots') || '[]');
-            const slot = slots.find(s => s.id === slotId);
-            if (slot && confirm(`Deseja carregar a versão "${slot.name}"? Isso substituirá o layout atual.`)) {
-                activeElements = slot.elements;
-                selectedElementId = null;
-                selectElement(null);
-                renderCanvas();
-                autoSave();
-            }
-        }
-
-        // Deleta um slot salvo do histórico
-        function deleteSlot(slotId) {
-            let slots = JSON.parse(localStorage.getItem('layout_quadra_slots') || '[]');
-            slots = slots.filter(s => s.id !== slotId);
-            localStorage.setItem('layout_quadra_slots', JSON.stringify(slots));
-            renderSavedSlots();
-        }
-    </script>
+/* ═══════════════════════════════════════
+   INIT
+═══════════════════════════════════════ */
+mkStands();
+buildArquib();
+render();
+</script>
 </body>
 </html>
